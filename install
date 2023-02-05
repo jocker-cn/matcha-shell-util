@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# installer with matcha shell
+# Copyright 2023 Joker
+
+matcha_directory_pre="matcha"
+default_install_dir="/usr/local/bin"
+
+curl_matcha_file_path=""
+
+#请求文件
+function curl_matcha_file() {
+  :
+}
+
+#installing with match shell
+#安装matcha
+function matcha_install() {
+  :
+}
+
+function matcha_check() {
+ :
+}
+
+# 优先安装log模块
+function install_log() {
+ :
+}
+
+# 安装其他核心模块
+function install_core_others() {
+  :
+}
+
+function main() {
+  :
+}
+
+main "$@"

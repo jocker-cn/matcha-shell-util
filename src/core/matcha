@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+# Brief description of your script
+# Copyright 2023 Joker
+
+source ./log/log
+source ./str/str_util
+
+env_pre="MATCHA-"
+models_dir_name="models"
+prop_dir_name="prop"
+log_dir_name="log"
+args=("$@")
+#模块
+model=
+#模块key
+model_key=
+#执行文件
+exec_file=
+#执行命令
+exec_args=
+
+#配置文件默认取环境变量
+prop_file=${MATCHA_PROPS:$(readlink -f ./prop/props))}
+
+
+abs_pwd="$(pwd)"
+abs_path="$(pwd)/$(basename "$0")"
+
+#设置模块可执行文件路径
+function init_abs_path_exec_file() {
+  if [[ -n "$exec_file" ]]; then
+      return 0
+  fi
+
+  if [[ -z "$model" ]]; then
+    log
+    exit 1
+  fi
+
+  if [[ -z "$prop_file" ]]; then
+    log
+    exit 1
+  fi
+  # 设置执行文件路径
+  exec_file=$(grep "$prop_file" -e "${model_key}" | awk -F '=' '{print $2}' )
+
+ if [[ -z "$exec_file" ]]; then
+    log
+    exit 1
+  fi
+}
+
+#可执行文件初始化
+function exec_file_init() {
+  if [[ -z $exec_file ]]; then
+    init_abs_path_exec_file
+  fi
+  # 设置执行权限
+  if [[ ! -x $exec_file ]]; then
+    chmod +x "$exec_file"
+  fi
+
+}
+
+# 判断模块是否存在
+function mode_exist(){
+ local model_name=$1
+   #模块名称为空
+ if [[ $(str_is_empty "$model_name") = 0 ]]; then
+      log
+      exit 1
+ fi
+  #请求组合模块
+  local req_matcha_key
+  #本地模块
+  local matcha_key=$env_pre$model
+  req_matcha_key=$(grep "$model_name" "$prop_file" |  awk -F '=' '{print $1}')
+
+# 指定的模块不存在
+if [[ ! $req_matcha_key -eq $matcha_key ]]; then
+   log
+   exit 1
+fi
+
+#设置模块key
+model_key=$matcha_key
+#匹配可执行文件路径
+exec_file=${!model_key}
+}
+
+#请求入参处理
+function request_args() {
+  #入参为空
+  if [[ ${#args[*]} == 0 ]]; then
+      #todo 输出help内容
+      exit 1
+  fi
+
+  model=${args[0]}
+
+  #模块是否存在
+  mode_exist "$model"
+  #初始化文件路径
+  exec_file_init
+
+  #入参设置 exec_args
+  local args_len=${#args[@]}
+  exec_args=${args[*]:1:$args_len}
+}
+
+# 脚本执行
+function exec_model_c() {
+  exec $exec_file "$exec_args"
+}
+
+
+function matcha_files() {
+  for file in *; do
+    file readlink -f "$file"
+  done
+}
+
+function main() {
+  request_args
+}

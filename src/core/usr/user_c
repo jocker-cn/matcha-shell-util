@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+#    用户信息处理
+#    提供获取当前用户下的用户组和用户名称
+# Copyright 2023 Joker
+
+
+current_username=`users`
+current_groups=`groups`
+
+function add_users(){
+  useradd $1
+}
+
+function add_groups(){
+  groupsadd $1
+}
+
+function add_user_groups(){
+  useradd $1 -g $2
+}
+
+function main() {
+  :
+}

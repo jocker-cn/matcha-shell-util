@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# constant
+# Copyright 2023 Joker
+
+EMPTY="EMPTY"
+STRING="STRING"
+NULL="NULL"
+ARRAY="ARRAY"
+SEMICOLON=";"
