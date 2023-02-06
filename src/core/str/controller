@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# str model controller
+# Copyright 2023 Joker
+
+function main() {
+    :
+}
+
+main "$@"

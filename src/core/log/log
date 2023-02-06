@@ -3,6 +3,16 @@
 # Brief description of your script
 # Copyright 2023 Joker
 
+################################################################
+#        log_level
+log_info="INFO"
+log_warn="WARNING"
+log_debug="DEBUG"
+log_error="ERROR"
+
+
+
+
 function log(){
   :
 }

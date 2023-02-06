@@ -3,7 +3,7 @@
 # 字符串操作
 #
 # Copyright 2023 Joker
-#source ${MATCHA-ARGS}
+source /usr/local/bin/matcha/core/args/constant
 
 
 # 是空串
@@ -12,32 +12,5 @@ function str_is_empty() {
     return 0
   else
     return 1
-  fi
-}
-
-# 是否是空串
-function str_no_empty() {
-  if [[ ! -z "$1" ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-function str_spit() {
-  str=$1
-  IFS=$2
-  read -ra array <<<"$str"
-  echo "${array[@]}"
-}
-
-function str_spit_echo() {
-  str=$1
-  spit=$2
-  str_is_empty $spit
-  if [[ $? = "0" ]]; then
-    echo $str
-  else
-    str_spit $str $spit
   fi
 }

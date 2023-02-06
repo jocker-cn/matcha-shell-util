@@ -3,9 +3,8 @@
 # Brief description of your script
 # Copyright 2023 Joker
 
-source ./log/log
-source ./str/str_util
-
+matcha_work_dir="${MATCHA_WORK}"
+default_prop_dir="${matcha_work_dir}/src/core/prop/properties.yml"
 env_pre="MATCHA-"
 models_dir_name="models"
 prop_dir_name="prop"
@@ -21,16 +20,17 @@ exec_file=
 exec_args=
 
 #配置文件默认取环境变量
-prop_file=${MATCHA_PROPS:$(readlink -f ./prop/props))}
-
+prop_file=${MATCHA_PROPS:-"$default_prop_dir")}
 
 abs_pwd="$(pwd)"
 abs_path="$(pwd)/$(basename "$0")"
 
+source ./log/log
+
 #设置模块可执行文件路径
 function init_abs_path_exec_file() {
   if [[ -n "$exec_file" ]]; then
-      return 0
+    return 0
   fi
 
   if [[ -z "$model" ]]; then
@@ -38,14 +38,14 @@ function init_abs_path_exec_file() {
     exit 1
   fi
 
-  if [[ -z "$prop_file" ]]; then
+  if [[ -z "$prop_file" ]] && [[ ! -e "$prop_file" ]]; then
     log
     exit 1
   fi
   # 设置执行文件路径
-  exec_file=$(grep "$prop_file" -e "${model_key}" | awk -F '=' '{print $2}' )
+  exec_file=$(grep "$prop_file" -e "${model_key}" | awk -F '=' '{print $2}')
 
- if [[ -z "$exec_file" ]]; then
+  if [[ -z "$exec_file" ]]; then
     log
     exit 1
   fi
@@ -64,37 +64,37 @@ function exec_file_init() {
 }
 
 # 判断模块是否存在
-function mode_exist(){
- local model_name=$1
-   #模块名称为空
- if [[ $(str_is_empty "$model_name") = 0 ]]; then
-      log
-      exit 1
- fi
+function mode_exist() {
+  local model_name=$1
+  #模块名称为空
+  if [[ -z "$model_name" ]]; then
+    log
+    exit 1
+  fi
   #请求组合模块
   local req_matcha_key
   #本地模块
   local matcha_key=$env_pre$model
-  req_matcha_key=$(grep "$model_name" "$prop_file" |  awk -F '=' '{print $1}')
+  req_matcha_key=$(grep "$model_name" "$prop_file" | awk -F '=' '{print $1}')
 
-# 指定的模块不存在
-if [[ ! $req_matcha_key -eq $matcha_key ]]; then
-   log
-   exit 1
-fi
+  # 指定的模块不存在
+  if [[ ! $req_matcha_key -eq $matcha_key ]]; then
+    log
+    exit 1
+  fi
 
-#设置模块key
-model_key=$matcha_key
-#匹配可执行文件路径
-exec_file=${!model_key}
+  #设置模块key
+  model_key=$matcha_key
+  #匹配可执行文件路径
+  exec_file=${!model_key}
 }
 
 #请求入参处理
 function request_args() {
   #入参为空
   if [[ ${#args[*]} == 0 ]]; then
-      #todo 输出help内容
-      exit 1
+    #todo 输出help内容
+    exit 1
   fi
 
   model=${args[0]}
@@ -114,11 +114,15 @@ function exec_model_c() {
   exec $exec_file "$exec_args"
 }
 
-
 function matcha_files() {
   for file in *; do
     file readlink -f "$file"
   done
+}
+
+#matcha 安装模块  (处理core和第三方models)
+function matcha_install() {
+  :
 }
 
 function main() {

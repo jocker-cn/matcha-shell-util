@@ -3,38 +3,180 @@
 # installer with matcha shell
 # Copyright 2023 Joker
 
-matcha_directory_pre="matcha"
-default_install_dir="/usr/local/bin"
+################################################################
+#                 用户相关
+#matcha 默认安装该用户
+matcha_user_info="matcha"
+current_users="$(users)"
+current_groups="$(groups)"
+current_dir="$(pwd)"
+################################################################
+#                 工作环境
+#matcha工作空间
+matcha_work_dir_key="MATCHA_WORK"
+matcha_prop_dir_key="MATCHA_PROPS"
+################################################################
+#                 matcha工程核心模块目录结构
+matcha_project_dir_pre="src/core"
 
-curl_matcha_file_path=""
+################################################################
+#                 matcha模块安装位置信息
 
-#请求文件
+#matcha内容均安装在该目录下
+matcha_directory="matcha"
+
+#matcha可执行文件在工程目录中的相对路径
+matcha_exec_file="$matcha_project_dir_pre/matcha"
+#matcha 默认安装在该位置
+default_install_dir_pre="${1:-"/usr/local"}"
+#matcha 工程安装的绝对路径
+default_install_dir="$default_install_dir_pre/$matcha_directory"
+#matcha 可执行文件安装的绝对路径
+default_install_matcha_exec_pre="/usr/local/bin"
+#matcha配置文件绝对路径
+properties_file_dir="$default_install_dir/$matcha_project_dir_pre/prop/properties.yml"
+
+################################################################
+#               工程包相关
+#安装包压缩文件名称
+matcha_file_name="matcha.tar.gz"
+#校验文件名称
+check_file_name="SHA256SUMS"
+#当前安装的版本 此处由项目管理者填写，一般一个脚本只对应安装一个版本的matcha shell
+version="test"
+#工程包下载地址
+curl_matcha_file_path="https://github.com/jocker-cn/matcha-shell-util/releases/download/${version}/$matcha_file_name"
+#校验文件下载地址
+check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/${version}/$check_file_name"
+
+#请求安装文件 (针对当前目录操作)
 function curl_matcha_file() {
-  :
+  curl -JLO $curl_matcha_file_path
+  curl -JLO $check_sha256
+
+  if [[ ! -f "$check_file_name" ]]; then
+    echo "SHA256SUMS download failed!!! please try again"
+  fi
+}
+# 安装文件解压缩 (针对当前目录操作)
+function tar_matcha_file() {
+  if [[ ! -d "$matcha_directory" ]]; then
+    sudo /usr/bin/mkdir "$matcha_directory"
+  fi
+  sudo /usr/bin/tar -xvf "$matcha_file_name" -c "$matcha_directory"
+}
+#安装文件校验
+function matcha_check() {
+  echo "matcha install file check  "
+  if ! sha256sum -c "$current_dir"/$check_file_name; then
+    sudo mv "$current_dir"/"$check_file_name" "$current_dir"/"$check_file_name$(date +%Y%m%d%H%M%S)"
+    sudo mv "$current_dir"/"$matcha_file_name" "$current_dir"/"$matcha_file_name$(date +%Y%m%d%H%M%S)"
+    echo "checked failed!!! please try again"
+    exit 1
+  fi
+  echo "file check success"
+}
+
+
+
+#新增用户 matcha
+function install_usr_info() {
+  local username
+  username=$(whoami)
+  if [[ ! $username = "root" ]]; then
+    echo "part of the installation process requires root privileges,"
+  fi
+  #新增matcha用户
+  sudo /usr/sbin/useradd $matcha_user_info -g $matcha_user_info
+  #将matcha添加到当前组
+  sudo /usr/sbin/usermod -a -G "$current_groups" "$matcha_user_info"
+}
+
+#文件权限处理 此操作在完成文件copy 后进行
+function matcha_chown() {
+  # 设置归属用户组
+  sudo /usr/bin/chown -R "$current_users:$current_groups" $default_install_dir
+
+  # 添加可执行权限
+  sudo /usr/bin/chmod -R 111 "$default_install_dir"
+
+  #可执行文件复制至/user/local/bin
+  sudo /usr/bin/cp -f $default_install_dir/$matcha_exec_file $default_install_matcha_exec_pre
+
+  #对于prop配置文件可读 不可写或执行
+  sudo /usr/bin/chmod -R 440 "$properties_file_dir"
+}
+
+# 复制文件到默认安装位置
+function matcha_file_copy() {
+  sudo /usr/bin/cp -rf "$current_dir/$matcha_directory" "$default_install_dir_pre"
+}
+
+function matcha_env_settings() {
+  echo "export $matcha_work_dir_key=$default_install_dir"  >> /etc/profile
+  echo "export $matcha_prop_dir_key=$properties_file_dir"  >> /etc/profile
+  source /etc/profile
+}
+
+
+#安装前置环境处理
+function install_pre_settings() {
+  #安装matcha用户
+  install_usr_info
+  #文件复制
+  matcha_file_copy
+  #文件权限处理
+  matcha_chown
+  #环境变量设置
+  matcha_env_settings
 }
 
 #installing with match shell
 #安装matcha
 function matcha_install() {
-  :
+  sudo /usr/bin/matcha install core
 }
 
-function matcha_check() {
- :
+function matcha_file_download() {
+  #请求安装文件
+  curl_matcha_file
+  #解压缩
+  tar_matcha_file
+  #安装文件校验
+  matcha_check
+}
+
+# matcha 控制器
+function install_matcha() {
+  :
 }
 
 # 优先安装log模块
 function install_log() {
- :
+  :
 }
 
-# 安装其他核心模块
-function install_core_others() {
+# 安装核心模块
+function install_core() {
   :
 }
 
 function main() {
-  :
+  echo "################################################################################"
+  echo "matcha_install for https://github.com/jocker-cn/matcha-shell-util"
+  if [[ ! -e $default_install_dir_pre ]]; then
+    echo "The specified installation directory does not exist: $default_install_dir_pre"
+    exit 1
+  fi
+
+  #安装文件下载
+  matcha_file_download
+
+  #安装前环境处理
+  install_pre_settings
+
+  #安装
+  matcha_install
 }
 
 main "$@"

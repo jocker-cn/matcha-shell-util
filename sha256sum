@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# create sha256sums with matcha-core models
+# Copyright 2023 Joker
+
+sha256sum_start_file=$1
+current_path="$(pwd)"
+sha256sums_file=$current_path/SHA256SUMS.txt
+
+function sha256sum_c() {
+  if [[ -z "$sha256sum_start_file" ]]; then
+    echo "请输入请求目录/文件名称"
+    exit 1
+  fi
+
+  if [[ ! -e "$sha256sum_start_file" ]]; then
+    echo "目录/文件不存在"
+    exit 1
+  fi
+
+  #创建文件
+  touch ./SHA256SUMS.txt
+
+  if [[ -f $sha256sum_start_file ]]; then
+    sha256sum_file "$sha256sum_start_file"
+    exit 0
+  fi
+
+  if [[ -d $sha256sum_start_file ]]; then
+    sha256sum_dir "$sha256sum_start_file"
+  fi
+
+}
+
+function sha256sum_file() {
+  local file_name="$1"
+  local sha256sums_file_number
+  sha256sums_file_number=$(sha256sum "$file_name")
+  echo "  sha256sums insert $sha256sums_file_number"
+  echo "$sha256sums_file_number" >>"${sha256sums_file}"
+}
+
+function sha256sum_dir() {
+  local start_dir=$1
+  for file in $(readlink -f "$start_dir/**"); do
+    file=${file#*"$current_path/"}
+    if [[ -f $file ]]; then
+      sha256sum_file "$file"
+      continue
+    fi
+    if [[ -d $file ]]; then
+      sha256sum_dir "$file"
+    fi
+  done
+}
+
+function main() {
+  echo "########################################################"
+  echo "sha256sums create for ${sha256sum_start_file}"
+  echo ""
+  sha256sum_c
+  echo ""
+  echo "sha256sums create successfully"
+}
+
+main
