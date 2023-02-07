@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# log template
+# Copyright 2023 Joker
+
+################################################################
+# log_level
+log_info="INFO"
+log_warn="WARNING"
+log_debug="DEBUG"
+log_error="ERROR"
+
+################################################################
+# 字体颜色
+font_black=30
+font_red=31
+font_green=32
+font_yellow=33
+font_blue=34
+font_magenta=35
+#青色
+font_blue2=36
+font_white=37
+
+################################################################
+# 字体背景颜色
+bg_black=40
+bg_red=41
+bg_green=42
+bg_yellow=43
+bg_blue=44
+bg_magenta=45
+#青色
+bg_blue2=46
+bg_white=47
+################################################################
+# 字体显示样式
+#默认
+font_style_default=0
+#高亮
+font_style_highlight=1
+#非粗体
+font_style_no_bold=22
+#下划线
+font_style_underline="4"
+#非下划线
+font_style_no_underline="24"
+#闪烁
+font_style_flashing="5"
+#闪烁
+font_style_no_flashing="25"
+
+################################################################
+printf_color_start="\033["
+printf_color_end="\033[0m"
+println_unicode="\n"
+
+function log() {
+  :
+}
+
+function main() {
+  :
+}
+
+main "$@"

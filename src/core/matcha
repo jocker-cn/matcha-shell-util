@@ -3,29 +3,159 @@
 # Brief description of your script
 # Copyright 2023 Joker
 
+###################################################################################
+# Copyright   2023  matcha工作区相关包路径配置
+#工作包路径 一般是安装位置
 matcha_work_dir="${MATCHA_WORK}"
-default_prop_dir="${matcha_work_dir}/src/core/prop/properties.yml"
+#matcha 核心模块位置
+matcha_core_work_dir="${MATCHA_WORK}/src/core/"
+
 env_pre="MATCHA-"
-models_dir_name="models"
+matcha_other_models_dir="$matcha_work_dir/models"
+###################################################################################
+# Copyright   2023  配置文件相关配置
+#配置文件工作目录名称
 prop_dir_name="prop"
-log_dir_name="log"
+#配置文件绝对路径
+default_prop_dir="${matcha_core_work_dir}/${prop_dir_name}/properties.yml"
+#配置文件路径 默认取环境变量 如何不存在则取默认安装位置
+prop_file=${MATCHA_PROPS:-"$default_prop_dir")}
+#核心模块配置key前缀
+matcha_core_model_key_pre="MATCHA-CORE-"
+#第三模块配置key前缀
+matcha_model_key_pre="MATCHA-"
+#配置信息开始标签
+matcha_head="<!MATCHA_PROP>"
+#配置信息结束标签
+matcha_end="</MATCHA_PROP>"
+
+###################################################################################
+# Copyright   2023  执行参数
+#入参
 args=("$@")
-#模块
+#命令调度模块名称
 model=
 #模块key
 model_key=
-#执行文件
+#模块可执行文件绝对路径
 exec_file=
-#执行命令
+#模块执行入参
 exec_args=
 
-#配置文件默认取环境变量
-prop_file=${MATCHA_PROPS:-"$default_prop_dir")}
+###################################################################################
+# Copyright   2023  日志模块
+log_dir_name="$matcha_core_work_dir/log/log"
 
 abs_pwd="$(pwd)"
 abs_path="$(pwd)/$(basename "$0")"
 
-source ./log/log
+log_file_dir=${MATCHA_LOG:-"/usr/local/bin/matcha_log"}
+# shellcheck source=./$log_file_dir
+source "$log_file_dir"
+
+#文件格式校验
+function matcha_prop_check() {
+  if [[ -f "$prop_file" ]]; then
+    sudo /usr/bin/touch "$prop_file"
+  else
+    local head_line
+    local end_line
+    head_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_head" | /usr/bin/awk -F ':' '{print $1}')"
+    end_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_end" | /usr/bin/awk -F ':''{print $1}')"
+    if [[ $head_line = "" ]] || [[ $end_line = "" ]] || [[ ! $head_line < $end_line ]]; then
+      $matcha_head >"$prop_file"
+      $matcha_end >>"$prop_file"
+    fi
+  fi
+}
+
+#配置文件校验
+function matcha_prop_set() {
+  #权限修改
+  sudo /usr/bin/chmod 660 "$prop_file"
+  #文件格式校验
+  matcha_prop_check
+}
+
+function matcha_install_pre() {
+  #prop文件设置
+  matcha_prop_set
+}
+
+#处理指定model下的所有模块
+function prop_loop() {
+  #遍历模块的绝对路径
+  local abs_model=$1
+  #配置模块key前缀
+  local key_pre=$2
+  #配置模块key完整名称
+  local mode_name
+  if [[ ! -d "$abs_model" ]]; then
+    abs_model="$matcha_core_work_dir"
+    key_pre=$matcha_core_model_key_pre
+  fi
+  #遍历指定目录下的所有模块
+  for file in $(/usr/bin/readlink -f "$abs_model/**"); do
+    if [[ -d "$file" ]]; then
+      #模块key名称设置
+      mode_name="$key_pre-$(${file##*/} | tr '[:lower:]' '[:upper:]')"
+      #遍历模块中的controller 如果不存在则直接跳过
+      #如果模块中存在多个controller则只取第一个
+      for file_name in $(/usr/bin/readlink -f "*controller*"); do
+        if [[ -f "$file_name" ]]; then
+          prop_set "$mode_name=$file_name"
+          break
+        fi
+      done
+    fi
+  done
+}
+
+function matcha_install_core() {
+  #遍历指定模块 添加配置信息到配置文件中
+  prop_loop "$matcha_core_work_dir" "$matcha_core_model_key_pre"
+}
+
+#模块安装前置处理
+function matcha_install_models_pre() {
+  #模块名称
+  local download_model_name=$1
+  #模块下载路径组装
+  local download_url=
+  #模块下载
+  curl_other_models "$download_url"
+
+}
+#安装第三方模块
+function matcha_install_models() {
+  local install_other_model_name=$1
+
+  matcha_install_models_pre "$install_other_model_name"
+
+  #遍历指定模块 添加配置信息到配置文件中
+  prop_loop "$matcha_other_models_dir" "$matcha_model_key_pre"
+}
+
+function matcha_install_post() {
+  #文件权限修改
+  sudo /usr/bin/chmod 440 "$prop_file"
+}
+
+#matcha 安装模块  (处理core和第三方models)
+function matcha_install() {
+  if [[ "$model" != "install" ]]; then
+    echo "### no install args: $model ####"
+    exit 1
+  fi
+  matcha_install_pre
+  if [[ "${#exec_args[@]}" = 0 ]] || [[ "${#exec_args[0]}" = "core" ]]; then
+    matcha_install_core
+  else
+    #第三方模块暂不处理
+    matcha_install_models "${exec_args}"
+  fi
+  matcha_install_post
+}
 
 #设置模块可执行文件路径
 function init_abs_path_exec_file() {
@@ -82,7 +212,6 @@ function mode_exist() {
     log
     exit 1
   fi
-
   #设置模块key
   model_key=$matcha_key
   #匹配可执行文件路径
@@ -120,8 +249,18 @@ function matcha_files() {
   done
 }
 
-#matcha 安装模块  (处理core和第三方models)
-function matcha_install() {
+function prop_set() {
+  sudo /usr/bin/sed -i '/'$matcha_head'/a\'"$1"'' "$prop_file"
+}
+
+#下载第三方安装文件
+function curl_other_models() {
+  local download_url=$1
+
+}
+
+#文件权限处理
+function other_models_chown() {
   :
 }
 

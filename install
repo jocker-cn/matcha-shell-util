@@ -101,7 +101,7 @@ function matcha_chown() {
   sudo /usr/bin/chmod -R 111 "$default_install_dir"
 
   #可执行文件复制至/user/local/bin
-  sudo /usr/bin/cp -f $default_install_dir/$matcha_exec_file $default_install_matcha_exec_pre
+  sudo /usr/bin/cp -f "$default_install_dir/$matcha_exec_file" $default_install_matcha_exec_pre
 
   #对于prop配置文件可读 不可写或执行
   sudo /usr/bin/chmod -R 440 "$properties_file_dir"
@@ -134,7 +134,7 @@ function install_pre_settings() {
 #installing with match shell
 #安装matcha
 function matcha_install() {
-  sudo /usr/bin/matcha install core
+  sudo /usr/local/bin/matcha install core
 }
 
 function matcha_file_download() {
