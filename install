@@ -146,21 +146,6 @@ function matcha_file_download() {
   matcha_check
 }
 
-# matcha 控制器
-function install_matcha() {
-  :
-}
-
-# 优先安装log模块
-function install_log() {
-  :
-}
-
-# 安装核心模块
-function install_core() {
-  :
-}
-
 function main() {
   echo "################################################################################"
   echo "matcha_install for https://github.com/jocker-cn/matcha-shell-util"

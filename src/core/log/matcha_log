@@ -6,41 +6,46 @@
 ################################################################
 # log_level
 log_info="INFO"
-log_warn="WARNING"
+log_warn="WARN"
 log_debug="DEBUG"
 log_error="ERROR"
+#log 日志级别对应的符号
+log_info_symbol="√"
+log_warn_symbol="!"
+log_error_symbol="X"
+log_debug_symbol="D"
 
 ################################################################
-# 字体颜色
-font_black=30
-font_red=31
-font_green=32
-font_yellow=33
-font_blue=34
-font_magenta=35
+# 日志 字体颜色
+font_black="30"
+font_red="31"
+font_green="32"
+font_yellow="33"
+font_blue="34"
+font_magenta="35"
 #青色
-font_blue2=36
-font_white=37
+font_blue2="36"
+font_white="37"
 
 ################################################################
-# 字体背景颜色
-bg_black=40
-bg_red=41
-bg_green=42
-bg_yellow=43
-bg_blue=44
-bg_magenta=45
+# 日志 字体背景颜色
+bg_black="40"
+bg_red="41"
+bg_green="42"
+bg_yellow="43"
+bg_blue="44"
+bg_magenta="45"
 #青色
-bg_blue2=46
-bg_white=47
+bg_blue2="46"
+bg_white="47"
 ################################################################
-# 字体显示样式
+# 日志 字体显示样式
 #默认
-font_style_default=0
+font_style_default="0"
 #高亮
-font_style_highlight=1
+font_style_highlight="1"
 #非粗体
-font_style_no_bold=22
+font_style_no_bold="22"
 #下划线
 font_style_underline="4"
 #非下划线
@@ -51,16 +56,80 @@ font_style_flashing="5"
 font_style_no_flashing="25"
 
 ################################################################
+# printf 打印颜色模板定义
 printf_color_start="\033["
 printf_color_end="\033[0m"
 println_unicode="\n"
 
+################################################################
+# printf 日志内容颜色格式定义
+# 日志字体颜色
+color_template="%s;%s;%sm"
+# 日志颜色内容左对齐
+printf_color_context_left_align="%-s"
+# 日志颜色内容左对齐 三个字符
+printf_color_context_left_align3="%-3s"
+# 日志颜色内容左对齐 5个字符
+printf_color_context_left_align5="%-5s"
+# 日志颜色内容
+printf_color_context="%s"
+
+################################################################
+# printf 自定义样式的日志内容格式定义
+# 自定义样式日志内容模块
+printf_color_template="$printf_color_start$color_template$printf_color_context$printf_color_end"
+# 自定义样式日志左对其三个单位日志内容模块
+printf_color_template_align3="$printf_color_start$color_template$printf_color_context_left_align3$printf_color_end"
+# 自定义样式日志左对其五个单位日志内容模块
+printf_color_template_align5="$printf_color_start$color_template$printf_color_context_left_align5$printf_color_end"
+
+################################################################
+# 对应四个级别的日志头样式
+printf_info_symbol=$(/usr/bin/printf "[$printf_color_template]" $font_style_default $font_green $bg_black $log_info_symbol)
+printf_error_symbol=$(/usr/bin/printf "[$printf_color_template]" $font_style_default $font_red $bg_black $log_error_symbol)
+printf_warn_symbol=$(/usr/bin/printf "[$printf_color_template]" $font_style_default $font_yellow $bg_black $log_warn_symbol)
+printf_debug_symbol=$(/usr/bin/printf "[$printf_color_template]" $font_style_default $font_black $bg_black $log_debug_symbol)
+
+################################################################
+# 对应四个级别的日志前缀模板
+printf_info=$(/usr/bin/printf "$printf_color_template_align5" $font_style_default $font_green $bg_black $log_info)
+printf_error=$(/usr/bin/printf "$printf_color_template_align5" $font_style_default $font_red $bg_black $log_error)
+printf_warn=$(/usr/bin/printf "$printf_color_template_align5" $font_style_default $font_yellow $bg_black $log_warn)
+printf_debug=$(/usr/bin/printf "$printf_color_template_align5" $font_style_default $font_black $bg_black $log_debug)
+
+################################################################
+# 日志打印模块
+# 默认日志内容
+printf_log=$printf_color_context_left_align$println_unicode
+# info  级别日志模板
+printf_level_info="$printf_info_symbol $printf_info $printf_color_context_left_align$println_unicode"
+# warn  级别日志模板
+printf_level_warn="$printf_warn_symbol $printf_warn $printf_color_context_left_align$println_unicode"
+# error 级别日志模板
+printf_level_error="$printf_error_symbol $printf_error $printf_color_context_left_align$println_unicode"
+# debug 级别日志模板
+printf_level_debug="$printf_debug_symbol $printf_debug $printf_color_context_left_align$println_unicode"
+
+function log_info() {
+  local log_message=$1
+  /usr/bin/printf "$printf_level_info" "$log_message"
+}
+
+function log_warn() {
+  local log_message=$1
+  /usr/bin/printf "$printf_level_warn" "$log_message"
+}
+
+function log_error() {
+  local log_message=$1
+  /usr/bin/printf "$printf_level_error" "$log_message"
+}
+
+function log_debug() {
+  local log_message=$1
+  /usr/bin/printf "$printf_level_debug" "$log_message"
+}
+
 function log() {
-  :
+  /usr/bin/printf $printf_log "$1"
 }
-
-function main() {
-  :
-}
-
-main "$@"

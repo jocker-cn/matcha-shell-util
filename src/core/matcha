@@ -49,13 +49,17 @@ log_dir_name="$matcha_core_work_dir/log/log"
 abs_pwd="$(pwd)"
 abs_path="$(pwd)/$(basename "$0")"
 
+###################################################################################
+# Copyright 2023
 log_file_dir=${MATCHA_LOG:-"/usr/local/bin/matcha_log"}
-# shellcheck source=./$log_file_dir
-source "$log_file_dir"
+
+source /usr/local/bin/matcha_log
 
 #文件格式校验
 function matcha_prop_check() {
+  log_info "matcha $prop_file permissions settings"
   if [[ -f "$prop_file" ]]; then
+    log_info "matcha create $prop_file"
     sudo /usr/bin/touch "$prop_file"
   else
     local head_line
@@ -71,6 +75,7 @@ function matcha_prop_check() {
 
 #配置文件校验
 function matcha_prop_set() {
+  log_info "matcha $prop_file permissions settings"
   #权限修改
   sudo /usr/bin/chmod 660 "$prop_file"
   #文件格式校验
@@ -90,6 +95,7 @@ function prop_loop() {
   local key_pre=$2
   #配置模块key完整名称
   local mode_name
+  log_info "matcha install model directory: $abs_model"
   if [[ ! -d "$abs_model" ]]; then
     abs_model="$matcha_core_work_dir"
     key_pre=$matcha_core_model_key_pre
@@ -101,10 +107,17 @@ function prop_loop() {
       mode_name="$key_pre-$(${file##*/} | tr '[:lower:]' '[:upper:]')"
       #遍历模块中的controller 如果不存在则直接跳过
       #如果模块中存在多个controller则只取第一个
-      for file_name in $(/usr/bin/readlink -f "*controller*"); do
+      log_info "matcha deal with $mode_name"
+      for file_name in $(/usr/bin/readlink -f "$file/*controller*"); do
         if [[ -f "$file_name" ]]; then
           prop_set "$mode_name=$file_name"
+          if [[ ! -x "$file_name" ]]; then
+            /usr/bin/chown +x "$file_name"
+          fi
+          log_info "matcha $mode_name installation is complete"
           break
+        else
+          log_warn "matcha $mode_name executable[*controller*] does not exist"
         fi
       done
     fi
@@ -114,6 +127,17 @@ function prop_loop() {
 function matcha_install_core() {
   #遍历指定模块 添加配置信息到配置文件中
   prop_loop "$matcha_core_work_dir" "$matcha_core_model_key_pre"
+}
+
+#下载第三方安装文件
+function curl_other_models() {
+  local download_url=$1
+
+}
+
+#文件权限处理
+function other_models_chown() {
+  :
 }
 
 #模块安装前置处理
@@ -139,16 +163,15 @@ function matcha_install_models() {
 function matcha_install_post() {
   #文件权限修改
   sudo /usr/bin/chmod 440 "$prop_file"
+  log_info "matcha model installed"
 }
 
 #matcha 安装模块  (处理core和第三方models)
 function matcha_install() {
-  if [[ "$model" != "install" ]]; then
-    echo "### no install args: $model ####"
-    exit 1
-  fi
+  log_info "matcha install start"
   matcha_install_pre
   if [[ "${#exec_args[@]}" = 0 ]] || [[ "${#exec_args[0]}" = "core" ]]; then
+    log_info "matcha core model installation"
     matcha_install_core
   else
     #第三方模块暂不处理
@@ -159,30 +182,26 @@ function matcha_install() {
 
 #设置模块可执行文件路径
 function init_abs_path_exec_file() {
+  #已匹配到环境变量中的信息
   if [[ -n "$exec_file" ]]; then
     return 0
   fi
-
-  if [[ -z "$model" ]]; then
-    log
-    exit 1
-  fi
-
+  #配置文件不存在
   if [[ -z "$prop_file" ]] && [[ ! -e "$prop_file" ]]; then
-    log
+    log_error "matcha prop file not exist"
     exit 1
   fi
-  # 设置执行文件路径
+  #从配置文件中 获取执行文件路径
   exec_file=$(grep "$prop_file" -e "${model_key}" | awk -F '=' '{print $2}')
-
   if [[ -z "$exec_file" ]]; then
-    log
+    log_error "matcha the current model install failed: $model "
     exit 1
   fi
 }
 
 #可执行文件初始化
 function exec_file_init() {
+  log_info "matcha schedule model file: $exec_file"
   if [[ -z $exec_file ]]; then
     init_abs_path_exec_file
   fi
@@ -198,7 +217,7 @@ function mode_exist() {
   local model_name=$1
   #模块名称为空
   if [[ -z "$model_name" ]]; then
-    log
+    log_error "matcha schedule model require not empty string"
     exit 1
   fi
   #请求组合模块
@@ -209,12 +228,12 @@ function mode_exist() {
 
   # 指定的模块不存在
   if [[ ! $req_matcha_key -eq $matcha_key ]]; then
-    log
+    log_error "the model: $model_name is not exist"
     exit 1
   fi
   #设置模块key
   model_key=$matcha_key
-  #匹配可执行文件路径
+  #从环境中匹配可执行文件路径
   exec_file=${!model_key}
 }
 
@@ -222,12 +241,19 @@ function mode_exist() {
 function request_args() {
   #入参为空
   if [[ ${#args[*]} == 0 ]]; then
-    #todo 输出help内容
+    /usr/bin/man matcha
     exit 1
   fi
 
   model=${args[0]}
 
+  # 安装模块
+  if [[ "$model" = "install" ]]; then
+    matcha_install
+    exit 0
+  fi
+
+  log_info "matcha schedule request: $model"
   #模块是否存在
   mode_exist "$model"
   #初始化文件路径
@@ -240,30 +266,20 @@ function request_args() {
 
 # 脚本执行
 function exec_model_c() {
+  log_info "matcha exec model: $model, exec file: $exec_file request arguments: $exec_args"
   exec $exec_file "$exec_args"
-}
-
-function matcha_files() {
-  for file in *; do
-    file readlink -f "$file"
-  done
 }
 
 function prop_set() {
   sudo /usr/bin/sed -i '/'$matcha_head'/a\'"$1"'' "$prop_file"
 }
 
-#下载第三方安装文件
-function curl_other_models() {
-  local download_url=$1
-
-}
-
-#文件权限处理
-function other_models_chown() {
-  :
+function exec_opt() {
+  request_args
+  exec_model_c
 }
 
 function main() {
-  request_args
+  exec_opt
 }
+main
