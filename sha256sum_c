@@ -19,7 +19,7 @@ function sha256sum_c() {
   fi
 
   #创建文件
-  touch ./SHA256SUMS.txt
+  touch ./"$sha256sums_file"
 
   if [[ -f $sha256sum_start_file ]]; then
     sha256sum_file "$sha256sum_start_file"

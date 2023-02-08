@@ -51,12 +51,24 @@ check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/$
 
 #请求安装文件 (针对当前目录操作)
 function curl_matcha_file() {
+
+  /usr/bin/rm -f $matcha_file_name
+  /usr/bin/rm -f $check_file_name
+
   curl -JLO $curl_matcha_file_path
+
+  if [[ $? != 0 ]]; then
+    echo "$matcha_file_name download failed!!! please try again"
+    exit 1
+  fi
+
   curl -JLO $check_sha256
 
-  if [[ ! -f "$check_file_name" ]]; then
+  if [[ $? != 0 ]]; then
     echo "SHA256SUMS download failed!!! please try again"
+    exit 1
   fi
+  sudo /usr/bin/dos2unix SHA256SUMS.txt
 }
 # 安装文件解压缩 (针对当前目录操作)
 function tar_matcha_file() {
@@ -77,8 +89,6 @@ function matcha_check() {
   echo "file check success"
 }
 
-
-
 #新增用户 matcha
 function install_usr_info() {
   local username
@@ -86,10 +96,15 @@ function install_usr_info() {
   if [[ ! $username = "root" ]]; then
     echo "part of the installation process requires root privileges,"
   fi
-  #新增matcha用户
-  sudo /usr/sbin/useradd $matcha_user_info -g $matcha_user_info
-  #将matcha添加到当前组
-  sudo /usr/sbin/usermod -a -G "$current_groups" "$matcha_user_info"
+  {
+    #新增matcha用户
+    sudo /usr/sbin/groupadd -f "$current_groups"
+  } && {
+    sudo /usr/sbin/useradd "$matcha_user_info" -g "$current_groups"
+  } && {
+    #将matcha添加到当前组
+    sudo /usr/sbin/usermod -a -G "$current_groups" "$matcha_user_info"
+  }
 }
 
 #文件权限处理 此操作在完成文件copy 后进行
@@ -113,11 +128,10 @@ function matcha_file_copy() {
 }
 
 function matcha_env_settings() {
-  echo "export $matcha_work_dir_key=$default_install_dir"  >> /etc/profile
-  echo "export $matcha_prop_dir_key=$properties_file_dir"  >> /etc/profile
+  echo "export $matcha_work_dir_key=$default_install_dir" >>/etc/profile
+  echo "export $matcha_prop_dir_key=$properties_file_dir" >>/etc/profile
   source /etc/profile
 }
-
 
 #安装前置环境处理
 function install_pre_settings() {
@@ -135,6 +149,22 @@ function install_pre_settings() {
 #安装matcha
 function matcha_install() {
   sudo /usr/local/bin/matcha install core
+
+  if [[ $? != 0 ]]; then
+    echo "install failed come back current file"
+    #删除安装文件
+    sudo /usr/bin/rm -rf "$default_install_dir_pre"
+
+    if [[ $? != 0 ]]; then
+        echo "file delete failed,please manually"
+        echo "matcha dir: $default_install_dir_pre"
+        echo "matcha file: $default_install_matcha_exec_pre/matcha"
+        echo "matcha file: $default_install_matcha_exec_pre/matcha_log"
+    fi
+    sudo /usr/bin/rm -f "$default_install_matcha_exec_pre/matcha"
+    sudo /usr/bin/rm -f "$default_install_matcha_exec_pre/matcha_log"
+  fi
+
 }
 
 function matcha_file_download() {

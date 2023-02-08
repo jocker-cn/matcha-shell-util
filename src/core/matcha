@@ -8,7 +8,7 @@
 #工作包路径 一般是安装位置
 matcha_work_dir="${MATCHA_WORK}"
 #matcha 核心模块位置
-matcha_core_work_dir="${MATCHA_WORK}/src/core/"
+matcha_core_work_dir="${MATCHA_WORK}/src/core"
 
 env_pre="MATCHA-"
 matcha_other_models_dir="$matcha_work_dir/models"
@@ -247,7 +247,7 @@ function request_args() {
 
   model=${args[0]}
 
-  # 安装模块
+    # 安装模块
   if [[ "$model" = "install" ]]; then
     matcha_install
     exit 0
@@ -275,6 +275,7 @@ function prop_set() {
 }
 
 function exec_opt() {
+  log_info "matcha start request args: ${args[*]}"
   request_args
   exec_model_c
 }
