@@ -3,7 +3,7 @@
 # create sha256sums with matcha-core models
 # Copyright 2023 Joker
 
-sha256sum_start_file=$1
+sha256sum_start_file="$1"
 current_path="$(pwd)"
 sha256sums_file=$current_path/SHA256SUMS.txt
 
@@ -18,8 +18,7 @@ function sha256sum_c() {
     exit 1
   fi
 
-  #创建文件
-  touch ./"$sha256sums_file"
+  rm -f "$sha256sums_file"
 
   if [[ -f $sha256sum_start_file ]]; then
     sha256sum_file "$sha256sum_start_file"
@@ -29,7 +28,6 @@ function sha256sum_c() {
   if [[ -d $sha256sum_start_file ]]; then
     sha256sum_dir "$sha256sum_start_file"
   fi
-
 }
 
 function sha256sum_file() {

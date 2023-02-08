@@ -30,18 +30,18 @@ matcha_exec_file="$matcha_project_dir_pre/matcha"
 #matcha 默认安装在该位置
 default_install_dir_pre="${1:-"/usr/local"}"
 #matcha 工程安装的绝对路径
-default_install_dir="$default_install_dir_pre/$matcha_directory"
+default_install_dir="${!matcha_work_dir_key:-$default_install_dir_pre/$matcha_directory}"
 #matcha 可执行文件安装的绝对路径
 default_install_matcha_exec_pre="/usr/local/bin"
 #matcha配置文件绝对路径
 properties_file_dir="$default_install_dir/$matcha_project_dir_pre/prop/properties.yml"
-
+matcha_log_dir="$default_install_dir/$matcha_project_dir_pre/log/matcha_log"
 ################################################################
 #               工程包相关
 #安装包压缩文件名称
 matcha_file_name="matcha.tar.gz"
 #校验文件名称
-check_file_name="SHA256SUMS"
+check_file_name="SHA256SUMS.txt"
 #当前安装的版本 此处由项目管理者填写，一般一个脚本只对应安装一个版本的matcha shell
 version="test"
 #工程包下载地址
@@ -58,14 +58,14 @@ function curl_matcha_file() {
   curl -JLO $curl_matcha_file_path
 
   if [[ $? != 0 ]]; then
-    echo "$matcha_file_name download failed!!! please try again"
+    echo "[${FUNCNAME[0]}] $matcha_file_name download failed!!! please try again"
     exit 1
   fi
 
   curl -JLO $check_sha256
 
   if [[ $? != 0 ]]; then
-    echo "SHA256SUMS download failed!!! please try again"
+    echo "[${FUNCNAME[0]}] SHA256SUMS download failed!!! please try again"
     exit 1
   fi
   sudo /usr/bin/dos2unix SHA256SUMS.txt
@@ -75,18 +75,16 @@ function tar_matcha_file() {
   if [[ ! -d "$matcha_directory" ]]; then
     sudo /usr/bin/mkdir "$matcha_directory"
   fi
-  sudo /usr/bin/tar -xvf "$matcha_file_name" -c "$matcha_directory"
+  sudo /usr/bin/tar -xvf "$matcha_file_name" -C "$matcha_directory"
 }
 #安装文件校验
 function matcha_check() {
-  echo "matcha install file check  "
+  echo "[${FUNCNAME[0]}] install file check  "
   if ! sha256sum -c "$current_dir"/$check_file_name; then
-    sudo mv "$current_dir"/"$check_file_name" "$current_dir"/"$check_file_name$(date +%Y%m%d%H%M%S)"
-    sudo mv "$current_dir"/"$matcha_file_name" "$current_dir"/"$matcha_file_name$(date +%Y%m%d%H%M%S)"
-    echo "checked failed!!! please try again"
+    echo "[${FUNCNAME[0]}] checked failed!!! please try again"
     exit 1
   fi
-  echo "file check success"
+  echo "[${FUNCNAME[0]}] file check success"
 }
 
 #新增用户 matcha
@@ -94,7 +92,7 @@ function install_usr_info() {
   local username
   username=$(whoami)
   if [[ ! $username = "root" ]]; then
-    echo "part of the installation process requires root privileges,"
+    echo "[${FUNCNAME[0]}] part of the installation process requires root privileges,"
   fi
   {
     #新增matcha用户
@@ -109,17 +107,27 @@ function install_usr_info() {
 
 #文件权限处理 此操作在完成文件copy 后进行
 function matcha_chown() {
+  echo "[${FUNCNAME[0]}] install directory: $default_install_dir"
   # 设置归属用户组
-  sudo /usr/bin/chown -R "$current_users:$current_groups" $default_install_dir
+  {
+    sudo /usr/bin/chown -R "$current_users:$current_groups" "$default_install_dir"
+  } && {
+    # 添加可执行权限
+    sudo /usr/bin/chmod -R 111 "$default_install_dir"
+  } && {
+    #可执行文件复制至/user/local/bin
+    sudo /usr/bin/cp -f "$default_install_dir/$matcha_exec_file" $default_install_matcha_exec_pre
+    sudo /usr/bin/cp -f "$matcha_log_dir" $default_install_matcha_exec_pre
+  } && {
+    #对于prop配置文件可读 不可写或执行
+    sudo /usr/bin/chmod -R 440 "$properties_file_dir"
+  }
 
-  # 添加可执行权限
-  sudo /usr/bin/chmod -R 111 "$default_install_dir"
+  if [[ "$?" != 0 ]]; then
+    echo "[${FUNCNAME[0]}] install matcha_chown exception, please try again according to the error message "
+    exit 1
+  fi
 
-  #可执行文件复制至/user/local/bin
-  sudo /usr/bin/cp -f "$default_install_dir/$matcha_exec_file" $default_install_matcha_exec_pre
-
-  #对于prop配置文件可读 不可写或执行
-  sudo /usr/bin/chmod -R 440 "$properties_file_dir"
 }
 
 # 复制文件到默认安装位置
@@ -128,9 +136,13 @@ function matcha_file_copy() {
 }
 
 function matcha_env_settings() {
-  echo "export $matcha_work_dir_key=$default_install_dir" >>/etc/profile
-  echo "export $matcha_prop_dir_key=$properties_file_dir" >>/etc/profile
-  source /etc/profile
+  if [[ -z "$(grep -n "export $matcha_work_dir_key" /etc/profile | awk -F '=' '{print $2}')" ]]; then
+    echo "export $matcha_work_dir_key=$default_install_dir" >>/etc/profile
+  fi
+  if [[ -z "$(grep -n "export $matcha_prop_dir_key" /etc/profile | awk -F '=' '{print $2}')" ]]; then
+    echo "export $matcha_prop_dir_key=$properties_file_dir" >>/etc/profile
+  fi
+  . /etc/profile
 }
 
 #安装前置环境处理
@@ -148,18 +160,18 @@ function install_pre_settings() {
 #installing with match shell
 #安装matcha
 function matcha_install() {
-  sudo /usr/local/bin/matcha install core
+  . /usr/local/bin/matcha install core
 
   if [[ $? != 0 ]]; then
-    echo "install failed come back current file"
+    echo "[${FUNCNAME[0]}] install failed come back current file"
     #删除安装文件
-    sudo /usr/bin/rm -rf "$default_install_dir_pre"
+    sudo /usr/bin/rm -rf "$default_install_dir"
 
     if [[ $? != 0 ]]; then
-        echo "file delete failed,please manually"
-        echo "matcha dir: $default_install_dir_pre"
-        echo "matcha file: $default_install_matcha_exec_pre/matcha"
-        echo "matcha file: $default_install_matcha_exec_pre/matcha_log"
+      echo "[${FUNCNAME[0]}] file delete failed,please manually"
+      echo "[${FUNCNAME[0]}] matcha dir: $default_install_dir"
+      echo "[${FUNCNAME[0]}] matcha file: $default_install_matcha_exec_pre/matcha"
+      echo "[${FUNCNAME[0]}] matcha file: $default_install_matcha_exec_pre/matcha_log"
     fi
     sudo /usr/bin/rm -f "$default_install_matcha_exec_pre/matcha"
     sudo /usr/bin/rm -f "$default_install_matcha_exec_pre/matcha_log"
@@ -178,20 +190,16 @@ function matcha_file_download() {
 
 function main() {
   echo "################################################################################"
-  echo "matcha_install for https://github.com/jocker-cn/matcha-shell-util"
+  echo "[${FUNCNAME[0]}] matcha_install for https://github.com/jocker-cn/matcha-shell-util"
   if [[ ! -e $default_install_dir_pre ]]; then
-    echo "The specified installation directory does not exist: $default_install_dir_pre"
+    echo "[${FUNCNAME[0]}] The specified installation directory does not exist: $default_install_dir_pre"
     exit 1
   fi
-
   #安装文件下载
   matcha_file_download
-
   #安装前环境处理
   install_pre_settings
-
   #安装
   matcha_install
 }
-
 main "$@"

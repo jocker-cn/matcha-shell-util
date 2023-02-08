@@ -8,7 +8,7 @@
 #工作包路径 一般是安装位置
 matcha_work_dir="${MATCHA_WORK}"
 #matcha 核心模块位置
-matcha_core_work_dir="${MATCHA_WORK}/src/core"
+matcha_core_work_dir="${matcha_work_dir}/src/core"
 
 env_pre="MATCHA-"
 matcha_other_models_dir="$matcha_work_dir/models"
@@ -57,27 +57,31 @@ source /usr/local/bin/matcha_log
 
 #文件格式校验
 function matcha_prop_check() {
-  log_info "matcha $prop_file permissions settings"
-  if [[ -f "$prop_file" ]]; then
-    log_info "matcha create $prop_file"
-    sudo /usr/bin/touch "$prop_file"
-  else
-    local head_line
-    local end_line
-    head_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_head" | /usr/bin/awk -F ':' '{print $1}')"
-    end_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_end" | /usr/bin/awk -F ':''{print $1}')"
-    if [[ $head_line = "" ]] || [[ $end_line = "" ]] || [[ ! $head_line < $end_line ]]; then
-      $matcha_head >"$prop_file"
-      $matcha_end >>"$prop_file"
-    fi
+  local head_line
+  local end_line
+  head_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_head" | /usr/bin/awk -F ':' '{print $1}')"
+  end_line="$(/usr/bin/cat -n "$prop_file" | /usr/bin/grep -n "$matcha_end" | /usr/bin/awk -F ':' '{print $1}')"
+  if [[ $head_line = "" ]] || [[ $end_line = "" ]] || [[ ! $head_line < $end_line ]]; then
+    echo "$matcha_head" >"$prop_file"
+    echo "$matcha_end" >>"$prop_file"
   fi
 }
 
 #配置文件校验
 function matcha_prop_set() {
-  log_info "matcha $prop_file permissions settings"
+  log_info "[${FUNCNAME[0]}] set $prop_file "
   #权限修改
-  sudo /usr/bin/chmod 660 "$prop_file"
+
+  if [[ ! -f "$prop_file" ]]; then
+    log_info "[${FUNCNAME[0]}] create $prop_file"
+    sudo /usr/bin/touch "$prop_file"
+  fi
+
+  if ! sudo /usr/bin/chmod 660 "$prop_file"; then
+    log_error "[${FUNCNAME[0]}] file: $prop_file 'chmod' failed"
+    exit 1
+  fi
+
   #文件格式校验
   matcha_prop_check
 }
@@ -95,7 +99,7 @@ function prop_loop() {
   local key_pre=$2
   #配置模块key完整名称
   local mode_name
-  log_info "matcha install model directory: $abs_model"
+  log_info "[${FUNCNAME[0]}] install model directory: $abs_model"
   if [[ ! -d "$abs_model" ]]; then
     abs_model="$matcha_core_work_dir"
     key_pre=$matcha_core_model_key_pre
@@ -104,20 +108,20 @@ function prop_loop() {
   for file in $(/usr/bin/readlink -f "$abs_model/**"); do
     if [[ -d "$file" ]]; then
       #模块key名称设置
-      mode_name="$key_pre-$(${file##*/} | tr '[:lower:]' '[:upper:]')"
+      mode_name="$key_pre$(echo "${file##*/}" | tr '[:lower:]' '[:upper:]')"
       #遍历模块中的controller 如果不存在则直接跳过
       #如果模块中存在多个controller则只取第一个
-      log_info "matcha deal with $mode_name"
+      log_info "[${FUNCNAME[0]}] deal with $mode_name"
       for file_name in $(/usr/bin/readlink -f "$file/*controller*"); do
         if [[ -f "$file_name" ]]; then
           prop_set "$mode_name=$file_name"
           if [[ ! -x "$file_name" ]]; then
             /usr/bin/chown +x "$file_name"
           fi
-          log_info "matcha $mode_name installation is complete"
+          log_info "[${FUNCNAME[0]}] $mode_name installation is complete"
           break
         else
-          log_warn "matcha $mode_name executable[*controller*] does not exist"
+          log_warn "[${FUNCNAME[0]}] $mode_name executable[*controller*] does not exist"
         fi
       done
     fi
@@ -162,22 +166,25 @@ function matcha_install_models() {
 
 function matcha_install_post() {
   #文件权限修改
-  sudo /usr/bin/chmod 440 "$prop_file"
-  log_info "matcha model installed"
+  if ! sudo /usr/bin/chmod 440 "$prop_file"; then
+    log_error "[${FUNCNAME[0]}] file: $prop_file 'chmod' failed"
+  fi
+  log_info "[${FUNCNAME[0]}] ${#exec_args[1]} installed"
 }
 
 #matcha 安装模块  (处理core和第三方models)
 function matcha_install() {
-  log_info "matcha install start"
+  log_info "[${FUNCNAME[0]}] install start"
   matcha_install_pre
-  if [[ "${#exec_args[@]}" = 0 ]] || [[ "${#exec_args[0]}" = "core" ]]; then
-    log_info "matcha core model installation"
+  if [[ "${#exec_args[@]}" = 1 ]] || [[ "${#exec_args[1]}" = "core" ]]; then
+    log_info "[${FUNCNAME[0]}] core model installation"
     matcha_install_core
   else
     #第三方模块暂不处理
     matcha_install_models "${exec_args}"
   fi
   matcha_install_post
+  log_info "[${FUNCNAME[0]}] Install Successfully!!!"
 }
 
 #设置模块可执行文件路径
@@ -188,20 +195,20 @@ function init_abs_path_exec_file() {
   fi
   #配置文件不存在
   if [[ -z "$prop_file" ]] && [[ ! -e "$prop_file" ]]; then
-    log_error "matcha prop file not exist"
+    log_error "[${FUNCNAME[0]}] prop file not exist"
     exit 1
   fi
   #从配置文件中 获取执行文件路径
   exec_file=$(grep "$prop_file" -e "${model_key}" | awk -F '=' '{print $2}')
   if [[ -z "$exec_file" ]]; then
-    log_error "matcha the current model install failed: $model "
+    log_error "[${FUNCNAME[0]}] the current model install failed: $model "
     exit 1
   fi
 }
 
 #可执行文件初始化
 function exec_file_init() {
-  log_info "matcha schedule model file: $exec_file"
+  log_info "[${FUNCNAME[0]}] schedule model file: $exec_file"
   if [[ -z $exec_file ]]; then
     init_abs_path_exec_file
   fi
@@ -217,7 +224,7 @@ function mode_exist() {
   local model_name=$1
   #模块名称为空
   if [[ -z "$model_name" ]]; then
-    log_error "matcha schedule model require not empty string"
+    log_error "[${FUNCNAME[0]}] schedule model require not empty string"
     exit 1
   fi
   #请求组合模块
@@ -247,13 +254,13 @@ function request_args() {
 
   model=${args[0]}
 
-    # 安装模块
+  # 安装模块
   if [[ "$model" = "install" ]]; then
     matcha_install
     exit 0
   fi
 
-  log_info "matcha schedule request: $model"
+  log_info "[${FUNCNAME[0]}] schedule request: $model"
   #模块是否存在
   mode_exist "$model"
   #初始化文件路径
@@ -266,21 +273,31 @@ function request_args() {
 
 # 脚本执行
 function exec_model_c() {
-  log_info "matcha exec model: $model, exec file: $exec_file request arguments: $exec_args"
+  log_info "[${FUNCNAME[0]}] exec model: $model, exec file: $exec_file request arguments: $exec_args"
   exec $exec_file "$exec_args"
 }
 
 function prop_set() {
-  sudo /usr/bin/sed -i '/'$matcha_head'/a\'"$1"'' "$prop_file"
+  local prop_key_value=$1
+  if ! /usr/bin/grep -q "$prop_key_value" "$prop_file"; then
+    sudo /usr/bin/sed -i '/'$matcha_head'/a\'"$1"'' "$prop_file"
+  fi
 }
 
 function exec_opt() {
-  log_info "matcha start request args: ${args[*]}"
   request_args
   exec_model_c
 }
 
 function main() {
+  log_info "[${FUNCNAME[0]}] request args: ${args[*]}"
+
+  if [[ -z "${matcha_work_dir}" ]]; then
+    log_info "[${FUNCNAME[0]}] work dir is empty: ${matcha_work_dir}"
+    exit 1
+  fi
+
+  log_info "[${FUNCNAME[0]}] work dir: ${matcha_work_dir}"
   exec_opt
 }
 main
