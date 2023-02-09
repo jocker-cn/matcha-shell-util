@@ -18,6 +18,7 @@ matcha install details see [https://github.com/jocker-cn/matcha-shell-util/relea
 # About issue
 
 Please provide the server environment, execute script commands, and error messages
+[issue](https://github.com/jocker-cn/matcha-shell-util/issues)
 
 Example: issue commit
 ```
@@ -26,7 +27,7 @@ script: matcha os test
 error messages: error message
 ```
 
-[issue](https://github.com/jocker-cn/matcha-shell-util/issues) 中提出
+
 
 # How to install other models
 
