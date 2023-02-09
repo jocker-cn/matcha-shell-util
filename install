@@ -48,7 +48,8 @@ version="test"
 curl_matcha_file_path="https://github.com/jocker-cn/matcha-shell-util/releases/download/${version}/$matcha_file_name"
 #校验文件下载地址
 check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/${version}/$check_file_name"
-
+#man_docs
+MAN_DOCS="matcha.1"
 #请求安装文件 (针对当前目录操作)
 function curl_matcha_file() {
 
@@ -188,6 +189,11 @@ function matcha_file_download() {
   matcha_check
 }
 
+matcha_man_install() {
+  mkdir -p "/usr/man/man1/matcha.1"
+  /usr/bin/cp ./$MAN_DOCS "/usr/man/man1/matcha.1"
+}
+
 function main() {
   echo "################################################################################"
   echo "[${FUNCNAME[0]}] matcha_install for https://github.com/jocker-cn/matcha-shell-util"
@@ -201,5 +207,7 @@ function main() {
   install_pre_settings
   #安装
   matcha_install
+  #man文档安装
+  matcha_man_install
 }
 main "$@"

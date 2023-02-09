@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Test the src/core command
+# Copyright 2023 Joker
+
+function test_args() {
+  :
+}
+
+function main() {
+  :
+}
+
+main "$@"

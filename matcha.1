@@ -1,0 +1,38 @@
+.TH matcha shell help docs
+.SH MORE_INFO
+see https://github.com/jocker-cn/matcha-shell-util/blob/main/README.md
+.SH NAME
+ matcha \- shell script schedule manager
+.SH SYNOPSIS
+ matcha [models/instruction] [arguments]
+.SH DESCRIPTION
+.TP
+.B \-v, version matcha version
+.TP
+.B install [model_name]
+default install matcha core model;others model's name: install others model use model's name;
+.RS
+Example: (matcha install core) or (matcha install ttyCall) : install core model or install model ttyCall
+.RE
+.TP
+.B model_name [args]
+model_name is the 'module' you want to use;
+[args] the model use args.(see options for details)
+.RS
+Example: (matcha str -s "str_spit" "_")
+.RE
+.SH MODEL_DESCRIPTION
+.TP
+.B model_name help
+if you want to see the model's description, you can use the command
+Example: (matcha os help) understand the parameters required to use the os module
+.SH VERSION
+ matcha 1.0.0
+.SH BUGS
+ u can see https://github.com/jocker-cn/matcha-shell-util/issues
+.SH EMAIL
+.MT
+ joker00647@gmail.com
+.ME
+.SH AUTHOR
+ github: https://github.com/jocker-cn

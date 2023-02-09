@@ -21,24 +21,24 @@ function main() {
 
   if ! ./sha256sum_c "$package_dir"; then
     log_error "$method_name sha256sum_c exec failed"
+    exit 1
   fi
 
   log_info "$method_name update file dir in  $sha256sum_file"
 
   if ! sed -i "s/*/matcha\//g" ./$sha256sum_file; then
     log_error "$method_name sed $sha256sum_file failed"
+    exit 1
   fi
 
   log_info "$method_name package $package_name"
 
-  if ! tar -zcvf matcha.tar.gz $package_dir; then
+  if ! tar -zcvf matcha.tar.gz $package_dir matcha.1; then
     log_error "$method_name package $package_name failed"
+    exit 1
   fi
 
   log_info "$method_name package $package_name"
 }
 
 main "$@"
-
-
-
