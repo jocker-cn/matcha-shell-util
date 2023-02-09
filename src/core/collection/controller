@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Brief description of your script
+# Copyright 2023 Joker
+
+source ./map
+
+function main() {
+  :
+}
+
+main "$@"

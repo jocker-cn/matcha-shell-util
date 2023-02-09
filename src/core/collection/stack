@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# shell for stack
+# Copyright 2023 Joker
+
+#!/bin/bash
+
+stack=()
+
+function push {
+  local item=$1
+  stack=("$item" "${stack[@]}")
+}
+
+function pop {
+  local item=${stack[0]}
+  stack=("${stack[@]:1}")
+  echo "$item"
+}
+
+function peek {
+  echo "${stack[0]}"
+}
+
+function is_empty {
+  [ ${#stack[@]} -eq 0 ] && echo "true" || echo "false"
+}
+
+function main() {
+  :
+}
+
+main "$@"

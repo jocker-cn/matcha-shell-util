@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# shell collections for map
+# Copyright 2023 Joker
+
+declare -A map
+
+function put() {
+  local key=$1
+  local value=$2
+  map["$key"]="$value"
+}
+
+function get() {
+  echo "${map["$1"]}"
+}
+
+function remove() {
+  local key=$1
+  map["$key"]=
+  unset 'map["$key"]'
+}
+
+function keys() {
+  echo "${!map[@]}"
+}
+
+function values() {
+  echo "${map[@]}"
+}
+
+put "123" "456"
+
+var=$(get "123")
+#echo "$var"
