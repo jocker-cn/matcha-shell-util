@@ -32,5 +32,3 @@ error messages: error message
 # How to install other models
 
 please see [https://github.com/jocker-cn/matcha-shell-util/blob/main/[MODELS.md](https://github.com/jocker-cn/matcha-shell-util/blob/main/MODELS.md)
-
-# Model 
