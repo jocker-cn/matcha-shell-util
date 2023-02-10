@@ -3,8 +3,103 @@
 # file model controller
 # Copyright 2023 Joker
 
+arg_c="c"
+arg_h="h"
+opts="$arg_c:$arg_h"
+
+# 是否是文件夹
+function is_directory() {
+  if [[ -d $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 是否是文件
+function is_file() {
+  if [[ -f $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 是否存在文件/文件夹
+function is_exist() {
+  if [[ -e $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+#文件是否可执行
+function file_is_x() {
+  if [[ -x $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 文件长度是否为0
+function file_is_empty() {
+  if [[ -s $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 文件是否可读
+function file_is_read() {
+  if [[ -r $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 文件是否可写
+function file_is_write() {
+  if [[ -r $1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# 批量创建文件夹
+function mkdir_file_batch() {
+  local file_name_array=$1
+  if [[ -z "$file_name_array" ]]; then
+    return 0
+  fi
+  IFS=" "
+  read -ra file_name_array <<<"$1"
+  for file in "${file_name_array[@]}"; do
+    echo "$file"
+    mkdir -p $file
+  done
+}
+
+function help() {
+  echo "help"
+}
+
 function main() {
-    :
+  local opt
+  while getopts ":$opts" opt; do
+    case "$opt" in
+    "c")
+      mkdir_file_batch "$OPTARG"
+      ;;
+    "h" | *)
+      help
+      ;;
+    esac
+  done
 }
 
 main "$@"
