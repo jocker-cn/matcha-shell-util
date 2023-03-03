@@ -1,9 +1,27 @@
 use std::collections::HashMap;
 use std::{env, fs};
-use std::fs::{create_dir_all, File};
+use std::fs::{create_dir_all, File, metadata, Metadata, Permissions};
 use std::path::Path;
+use std::process::{Command, Output};
 use crate::actuator::Operator;
 
+
+pub fn is_executable(filename: &str) -> bool {
+    if is_file(filename) {
+        let meta = file_metadata(filename);
+        let permissions = meta.permissions();
+
+    }
+    return false;
+}
+
+pub fn file_metadata(filename: &str) -> Metadata {
+    return metadata(filename).unwrap();
+}
+
+pub fn sh(sd: dir, args: Vec<String>, msg: &str) -> Output {
+    return Command::new(sd).args(args).output().expect(msg);
+}
 
 pub fn create_file(filename: &str, is_file: bool) -> bool {
     if !is_file {
