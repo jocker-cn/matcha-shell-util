@@ -3,6 +3,22 @@
 require_relative 'model_wrapper'
 require_relative 'check'
 
+FORBIDDEN_SHELL = ["rm"]
+
+class ShellCheck < Check
+  def initialize(*k)
+    super(k)
+  end
+
+  def forbidden_shell(*k)
+    k -= FORBIDDEN_SHELL
+    !k.empty?
+  end
+
+  def check_obj
+    forbidden_shell(@obj)
+  end
+end
 
 class ModelCheck < Check
   def initialize(k)

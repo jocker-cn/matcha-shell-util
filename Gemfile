@@ -2,5 +2,6 @@
 
 # source "https://rubygems.org"
 source "https://gems.ruby-china.com/"
-# gem "rails"
+gem "net-ssh"
+gem "net-scp"
 

@@ -2,7 +2,7 @@
 require_relative '../util/constant'
 
 class Check
-  def initialize(k)
+  def initialize(*k)
     @obj=k
   end
   def check_obj

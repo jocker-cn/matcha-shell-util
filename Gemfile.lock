@@ -1,12 +1,17 @@
 GEM
   remote: https://gems.ruby-china.com/
   specs:
+    net-scp (4.0.0)
+      net-ssh (>= 2.6.5, < 8.0.0)
+    net-ssh (7.0.1)
 
 PLATFORMS
   x64-mingw-ucrt
   x86-mingw32
 
 DEPENDENCIES
+  net-scp
+  net-ssh
 
 BUNDLED WITH
    2.3.26
