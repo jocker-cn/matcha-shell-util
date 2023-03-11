@@ -1,27 +1,14 @@
 # frozen_string_literal: true
+require_relative 'executors'
 
-class FileExecutor
-  include Executors
+class FileExecutor < ExecutorOpt
 
-  def initialize(op, file)
-    @op = get_op(op)
-    @file = file
+  def initialize(models)
+    @models = models
+    @file = models.args
   end
 
   def exec
-    @op.ec(@file)
-  end
-end
-
-def get_op(op)
-  CreateOP
-end
-
-class OPFile
-  def ec(file) end
-end
-
-class CreateOP < OPFile
-  def ec(file)
+    super
   end
 end

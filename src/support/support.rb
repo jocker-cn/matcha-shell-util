@@ -1,34 +1,37 @@
 # frozen_string_literal: true
 
-require_relative 'model_choose'
+require_relative 'model_wrapper'
 require_relative 'check'
+
+
 class ModelCheck < Check
   def initialize(k)
     super(k)
   end
 
-  def check
+  def check_obj
     super
   end
 end
 
 class Support
   def initialize(options)
-    map = []
+    map = {}
     options.each { |k, v|
       map[k] = v if check(k)
     }
-    @map = map unless map.empty?
+    @map = map
   end
 
+  # 参数校验
   def check(k)
-    new_check(k).check
+    new_check(k).check_obj
   end
 
   def call
     if @map.empty?
       return
     end
-    ModelChoose.new(@map)
+    ModelWrapper.new(@map).run
   end
 end

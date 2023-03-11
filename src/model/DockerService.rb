@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-DOCKER_SERVICE="[Unit]
+DOCKER_SERVICE = "[Unit]
 Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
 After=network-online.target docker.socket firewalld.service containerd.service time-set.target
@@ -47,10 +47,7 @@ OOMScoreAdjust=-500
 [Install]
 WantedBy=multi-user.target"
 
-
-
-
-DOCKER_SOCKET="[Unit]
+DOCKER_SOCKET = "[Unit]
 Description=Docker Socket for the API
 
 [Socket]
@@ -64,8 +61,7 @@ SocketGroup=docker
 [Install]
 WantedBy=sockets.target"
 
-
-CONTAINERD_SERVICE="[Unit]
+CONTAINERD_SERVICE = "[Unit]
 Description=containerd container runtime
 Documentation=https://containerd.io
 After=network.target
@@ -87,3 +83,28 @@ TasksMax=infinity
 
 [Install]
 WantedBy=multi-user.target"
+
+DOCKER_DAEMON = "{
+    \"insecure-registries\": [\"private-hub\"],
+    \"registry-mirrors\": [
+        \"https://registry.docker-cn.com\"
+    ],
+    \"max-concurrent-downloads\": 15,
+    \"max-concurrent-uploads\": 15,
+        \"oom-score-adjust\": -1000,
+        \"graph\": \"/var/lib/docker\",
+    \"exec-opts\": [\"native.cgroupdriver=systemd\"],
+    \"storage-driver\": \"overlay2\",
+    \"storage-opts\": [
+        \"overlay2.override_kernel_check=true\",
+        \"dm.use_deferred_removal=true\",
+        \"dm.use_deferred_deletion=true\"
+    ],
+    \"log-driver\": \"json-file\",
+    \"log-opts\": {
+        \"max-size\": \"100m\",
+        \"max-file\": \"3\"
+    },
+    \"experimental\": false,
+     \"debug\": false
+}"

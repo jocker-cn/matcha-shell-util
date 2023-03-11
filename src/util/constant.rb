@@ -70,9 +70,7 @@ OP_COLL_NO_ARGS = []
 
 class SHELL
   CP_ = "/usr/bin/cp "
-  SYSTEMCTL_START = "/usr/bin/systemctl start "
-  SYSTEMCTL_STOP = "/usr/bin/systemctl stop "
-  SYSTEMCTL_ENABLE = "/usr/bin/systemctl enable --now "
+  SYSTEMCTL_ = "/usr/bin/systemctl "
   CHOWN_ = "/usr/bin/chown "
   CAT_ = "/usr/bin/cat "
   CHMOD_ = "/usr/bin/chmod "
@@ -90,4 +88,10 @@ class SYS_PATH
   USR_BIN = "/usr/bin"
   USR_LOCAL_BIN = "/usr/local/bin"
   SYSTEMD_SYSTEMD = "/etc/systemd/system"
+  ETC_ = "/etc"
+end
+
+
+def is_install(k)
+  return k == I || k == INSTALL
 end

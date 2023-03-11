@@ -4,12 +4,10 @@
 
 require 'optparse'
 require_relative './util/constant'
-require_relative './util/http_util'
-require_relative './util/env_util'
-require_relative './util/file_util'
+require_relative './util/logger_util'
 require_relative './support/support'
-require_relative './model/DockerService'
 
+LOGGER_START ||= LoggerUtil.new("start")
 
 options = {}
 OptionParser.new do |opts|
@@ -39,18 +37,11 @@ end.parse!
 
 class Start
   def run(options)
+    LOGGER_START.info_model("matcha", "shell", "start")
+    LOGGER_START.info_model("matcha", "request", options.to_s)
     Support.new(options).call
   end
 end
 
-# Start.new.run(options)
+Start.new.run(options)
 
-
-# puts RbConfig::CONFIG['host_cpu'].include?("")
-# puts RbConfig::CONFIG
-# puts get_env_default("GEM_HOME","23")
-
-bytes = file_write(CONTAINERD_SERVICE,"d:\\a.txt")
-puts bytes
-puts CONTAINERD_SERVICE.length
-puts CONTAINERD_SERVICE.length <= bytes if bytes != nil

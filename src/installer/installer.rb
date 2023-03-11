@@ -9,4 +9,6 @@ module Installer
 
   def install_post
   end
+
+  protected :install_pre, :install_post
 end

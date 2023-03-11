@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-
+require 'etc'
 def get_pwd
   Dir.pwd
 end

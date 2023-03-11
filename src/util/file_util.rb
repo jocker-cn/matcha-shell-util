@@ -71,6 +71,8 @@ def move_single_file(src_file, dst_dir, file_permissions)
 end
 
 def file_write(context, src_file, encoding = "UTF-8")
+  dir_pre = File.dirname(src_file)
+  FileUtils.mkdir_p(dir_pre) unless dir_pre.eql?(".")
   FileUtils.touch(src_file)
   File.open(src_file, 'w', encoding: encoding) do |file|
     file.write(context) if context.length > 0
