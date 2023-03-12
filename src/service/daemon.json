@@ -1,0 +1,26 @@
+{
+  "insecure-registries": [
+    "https://registry.docker-cn.com"
+  ],
+  "registry-mirrors": [
+    "https://registry.docker-cn.com"
+  ],
+  "max-concurrent-downloads": 15,
+  "max-concurrent-uploads": 15,
+  "oom-score-adjust": -1000,
+  "data-root": "/var/lib/docker",
+  "exec-opts": [
+    "native.cgroupdriver=systemd"
+  ],
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "3"
+  },
+  "experimental": false,
+  "debug": false
+}

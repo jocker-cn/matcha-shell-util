@@ -15,6 +15,8 @@ INSTALL_DESC = '查看可安装的服务  [-i list] [--install list]
 
 HTTPS_C = "https"
 
+MODEL_NAME = { F || FILE => "FILE", I || INSTALL => "INSTALL", H || HELP => "HELP" }
+
 class InstallOp
   include OptionModel
 
@@ -61,6 +63,10 @@ class FileOp
   def help
     FILE_DESC
   end
+
+  def get_desc
+    "FILE"
+  end
 end
 
 # OP_COLL=Set.new.add(FileOp.new).add(InstallOp.new)
@@ -71,6 +77,7 @@ OP_COLL_NO_ARGS = []
 class SHELL
   CP_ = "/usr/bin/cp "
   SYSTEMCTL_ = "/usr/bin/systemctl "
+  SYSTEMCTL_DAEMON = "/usr/bin/systemctl daemon-reload"
   CHOWN_ = "/usr/bin/chown "
   CAT_ = "/usr/bin/cat "
   CHMOD_ = "/usr/bin/chmod "
@@ -90,7 +97,6 @@ class SYS_PATH
   SYSTEMD_SYSTEMD = "/etc/systemd/system"
   ETC_ = "/etc"
 end
-
 
 def is_install(k)
   return k == I || k == INSTALL

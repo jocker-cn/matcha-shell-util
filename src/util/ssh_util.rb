@@ -20,7 +20,7 @@ class AUTH_WAY
   NONE = "none"
 end
 
-class SSHWrapper
+class SSHOPWrapper
   attr_reader :host, :port, :auth_methods, :user, :password, :keys, :timeout, :logger
 
   def initialize(host, port = PORT, auth_methods, user, password, keys, timeout = 10, logger)

@@ -6,12 +6,13 @@ GEM
     matchi (0.1.2)
     net-scp (4.0.0)
       net-ssh (>= 2.6.5, < 8.0.0)
-    net-ssh (7.0.1)
+    net-ssh (7.1.0)
     psych (3.3.4)
 
 PLATFORMS
   x64-mingw-ucrt
   x86-mingw32
+  x86_64-linux
 
 DEPENDENCIES
   expect
@@ -20,4 +21,4 @@ DEPENDENCIES
   psych (~> 3.0)
 
 BUNDLED WITH
-   2.3.26
+   2.4.8

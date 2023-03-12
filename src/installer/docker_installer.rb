@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 #
 require_relative '../util/env_util'
+require_relative '../util/logger_util'
 require_relative '../util/constant'
 require_relative '../util/http_util'
 require_relative '../util/user_util'
 require_relative '../util/file_util'
 require_relative '../model/shell_executor'
 require_relative '../model/DockerService'
-
+require_relative './installer'
 
 URL_PRE = "https://download.docker.com/linux/static/stable/"
 ENV_KEY = "docker_version"
 DEFAULT_VERSION = get_env_default(ENV_KEY, "23.0.1")
 URL_POST = ".tgz"
-CHUNK_FILE = get_pwd + "/" + DEFAULT_VERSION + URL_POST
+CHUNK_FILE = get_pwd + "/docker-" + "%s" + URL_POST
 INSTALL_DIR = get_pwd + "/docker"
 INSTALL_FILES = INSTALL_DIR + "/** "
 CHMOD_SHELL = ["+x ", INSTALL_FILES]
@@ -26,6 +27,11 @@ START_SHELL = SHELL::SYSTEMCTL_ + " start docker"
 STOP_SHELL = SHELL::SYSTEMCTL_ + " stop docker"
 ENABLE_SHELL = SHELL::SYSTEMCTL_ + " enable --now docker"
 
+CONTAINER_START_SHELL = SHELL::SYSTEMCTL_ + " start containerd"
+CONTAINER_STOP_SHELL = SHELL::SYSTEMCTL_ + " stop containerd"
+CONTAINER_ENABLE_SHELL = SHELL::SYSTEMCTL_ + " enable --now containerd"
+
+DOCKER_LOG = LoggerUtil.new("DockerInstaller")
 
 class DockerInstaller
   include Installer
@@ -33,25 +39,35 @@ class DockerInstaller
   def initialize(version, platform)
     @version = get_version(version)
     @platform = get_pf(platform)
-    @url = URL_PRE + @platform + "/" + @version + URL_POST
-    @file = CHUNK_FILE
+    @url = URL_PRE + "#{@platform}" + "/docker-" + "#{@version}" + URL_POST
+    @file = sprintf(CHUNK_FILE, "#{@version}")
+    DOCKER_LOG.info_model("DOCKER", "INSTALL", "version: #{@version} platform: #{@platform} init...")
   end
 
   def download
-    re_download(@url, @file, nil).is_ok
+    DOCKER_LOG.info_model("DOCKER", "DOWNLOAD", "url: #{@url} ...")
+    re_download(@url, @file)
   end
 
   def install_pre
-    if download
-      if exec_shell(SHELL::TAR_, " -xvf ", @file)
-        if exec_shell(SHELL::CHMOD_, CHMOD_SHELL)
-          if exec_shell(SHELL::CP_, COPY_SHELL)
+    unless is_installed
+      DOCKER_LOG.info_model("DOCKER", "INSTALL", "docker already installed")
+      return false
+    end
+
+    result = download
+    if result.is_ok
+      if exec_shell(SHELL::TAR_, "-zxvf ", @file)
+        if exec_shell(SHELL::CHMOD_, *CHMOD_SHELL)
+          if exec_shell(SHELL::CP_, *COPY_SHELL)
             return true
           end
         end
       end
-      false
+    else
+      DOCKER_LOG.error_model("DOCKER", "DOWNLOAD", "docker download fail: #{result.error_obj}")
     end
+    false
   end
 
   def install
@@ -62,27 +78,40 @@ class DockerInstaller
     end
   end
 
+  def is_installed
+    no_app_check("docker") &&
+      begin
+        return `docker --version`.empty?
+      rescue
+        true
+      end
+  end
+
   def install_post
     start_docker
   end
 
   def start_docker
-    exec_shell(ENABLE_SHELL) if exec_shell(START_SHELL)
+     exec_shell(ENABLE_SHELL) if exec_shell(START_SHELL) if exec_shell(CONTAINER_ENABLE_SHELL) if exec_shell(CONTAINER_START_SHELL) if exec_shell(SHELL::SYSTEMCTL_DAEMON)
   end
 
   def install_file
+    DOCKER_LOG.info_model("DOCKER", "CREATOR", "create service file")
     file_write_batch({ DOCKER_DAEMON_FILE => DOCKER_DAEMON, DOCKER_SERVICE_FILE => DOCKER_SERVICE, CONTAINERD_FILE => CONTAINERD_SERVICE, DOCKER_SOCKET_FILE => DOCKER_SOCKET })
   end
 
   def exec_shell(shell, *args)
-    executor = ShellExecutor.new(shell, args)
+    executor = ShellExecutor.new(shell, *args)
+    DOCKER_LOG.info_model("DOCKER", "EXEC", "#{executor.shell}")
     executor.exec
+    unless executor.is_success
+      DOCKER_LOG.error_model("DOCKER", "EXEC", "faile: #{executor.shell} #{executor.stderr}")
+    end
     executor.is_success
   end
 
   def get_version(version)
-    if version == nil ? DEFAULT_VERSION : version
-    end
+    version == nil ? DEFAULT_VERSION : version
   end
 
   def get_pf(platform)
@@ -90,11 +119,11 @@ class DockerInstaller
       pl = is_platform(platform)
       return pl if pl != nil
     end
-    X86_64 if is_x86_64
-    AARCH64 if is_aarch64
-    ARMEL if is_armel
-    ARMHF if is_armhf
-    PPC64LE if is_ppc64le
+    return X86_64 if is_x86_64
+    return AARCH64 if is_aarch64
+    return ARMEL if is_armel
+    return ARMHF if is_armhf
+    return PPC64LE if is_ppc64le
     S390X if is_s390x
   end
 
@@ -108,3 +137,5 @@ class DockerInstaller
 
   private :install_file, :start_docker
 end
+
+DockerInstaller.new(nil, nil).install

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'logger'
+require_relative 'env_util'
 
 ERROR_TEMPLATE = "\033[0;31;1m %s \e[0m"
 INFO_TEMPLATE = "\033[0;32;1m %s \e[0m"
@@ -13,7 +14,7 @@ class LoggerUtil
     @logger.formatter = proc do |severity, datetime, progname, msg|
       msg_template = template_choose(severity)
       msg = sprintf(msg_template, "#{msg}")
-      "[#{datetime.strftime('%H:%M:%S')}][#{clas}]#{msg} \n"
+      "[#{datetime.strftime('%H:%M:%S')}][#{local_ip(nil)}][#{clas}]#{msg} \n"
     end
   end
 

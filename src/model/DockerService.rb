@@ -85,20 +85,18 @@ TasksMax=infinity
 WantedBy=multi-user.target"
 
 DOCKER_DAEMON = "{
-    \"insecure-registries\": [\"private-hub\"],
+    \"insecure-registries\": [\"https://registry.docker-cn.com\"],
     \"registry-mirrors\": [
         \"https://registry.docker-cn.com\"
     ],
     \"max-concurrent-downloads\": 15,
     \"max-concurrent-uploads\": 15,
         \"oom-score-adjust\": -1000,
-        \"graph\": \"/var/lib/docker\",
+        \"data-root\": \"/var/lib/docker\",
     \"exec-opts\": [\"native.cgroupdriver=systemd\"],
     \"storage-driver\": \"overlay2\",
     \"storage-opts\": [
-        \"overlay2.override_kernel_check=true\",
-        \"dm.use_deferred_removal=true\",
-        \"dm.use_deferred_deletion=true\"
+        \"overlay2.override_kernel_check=true\"
     ],
     \"log-driver\": \"json-file\",
     \"log-opts\": {

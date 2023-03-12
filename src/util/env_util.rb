@@ -77,19 +77,24 @@ def is_platform(platform)
   nil
 end
 
-
-
 def local_ip(network_name)
   # 获取当前机器正在使用的网卡信息
   if_addrs = Socket.getifaddrs.select { |if_addr| if_addr.addr&.ipv4? && !if_addr.flags & Socket::IFF_LOOPBACK != 0 }
 
   # 获取正在使用的网卡的 IP 地址
   if network_name == nil
-    ip = if_addrs.find { |if_addr| if_addr.flags & Socket::IFF_UP != 0 }
+    ip = if_addrs.find { |if_addr| (if_addr.flags & Socket::IFF_UP != 0) && if_addr.addr.ip_address != "127.0.0.1" }
   else
-    ip = if_addrs.find { |if_addr| (if_addr.flags & Socket::IFF_UP != 0) && if_addr.name == network_name }
+    ip = if_addrs.find { |if_addr| (if_addr.flags & Socket::IFF_UP != 0) && if_addr.addr.ip_address != "127.0.0.1" && if_addr.name == network_name }
   end
 
   # 返回 IP 地址
   ip.addr.ip_address if ip
+end
+
+def no_app_check(app)
+  false if app == nil
+  qa = "rpm -qa | grep #{app}"
+  result = `#{qa}`
+  result.empty?
 end

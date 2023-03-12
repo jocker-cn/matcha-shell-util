@@ -50,7 +50,6 @@ def yaml_to_ssh(yaml)
     obj["ssh"]["target"].each { |target|
       targets.push(Target.new(target["ip"], target["username"], target["password"]))
     }
-
     SSH.new(
       master: obj["master"],
       network_name: obj["network_name"],

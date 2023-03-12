@@ -14,18 +14,14 @@ MODEL_ORDER = {
 }
 
 class Models
+  attr_reader :desc, :model, :args
+
   def initialize(model, args)
+    @desc=MODEL_NAME[model]
     @model = model
     @args = args
   end
 
-  def model
-    @model
-  end
-
-  def args
-    @args
-  end
 
 end
 
