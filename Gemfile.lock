@@ -1,17 +1,23 @@
 GEM
   remote: https://gems.ruby-china.com/
   specs:
+    expect (0.0.13)
+      matchi (~> 0.0)
+    matchi (0.1.2)
     net-scp (4.0.0)
       net-ssh (>= 2.6.5, < 8.0.0)
     net-ssh (7.0.1)
+    psych (3.3.4)
 
 PLATFORMS
   x64-mingw-ucrt
   x86-mingw32
 
 DEPENDENCIES
+  expect
   net-scp
   net-ssh
+  psych (~> 3.0)
 
 BUNDLED WITH
    2.3.26

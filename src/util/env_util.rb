@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'socket'
 
 WINDOWS = "i386-mingw32"
 MACOS = "x86_64-darwin19"
@@ -74,4 +75,21 @@ def is_platform(platform)
   PPC64LE if PPC64LE.include?(platform)
   S390X if S390X.include?(platform)
   nil
+end
+
+
+
+def local_ip(network_name)
+  # 获取当前机器正在使用的网卡信息
+  if_addrs = Socket.getifaddrs.select { |if_addr| if_addr.addr&.ipv4? && !if_addr.flags & Socket::IFF_LOOPBACK != 0 }
+
+  # 获取正在使用的网卡的 IP 地址
+  if network_name == nil
+    ip = if_addrs.find { |if_addr| if_addr.flags & Socket::IFF_UP != 0 }
+  else
+    ip = if_addrs.find { |if_addr| (if_addr.flags & Socket::IFF_UP != 0) && if_addr.name == network_name }
+  end
+
+  # 返回 IP 地址
+  ip.addr.ip_address if ip
 end

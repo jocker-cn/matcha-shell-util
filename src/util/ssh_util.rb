@@ -1,8 +1,18 @@
 # frozen_string_literal: true
 require 'net/ssh'
 require 'net/scp'
+require 'pty'
+require 'expect'
 
 PORT = 22
+SSH_FILE="~/.ssh/id_rsa"
+SSH_PUB_FILE="~/.ssh/id_rsa.pub"
+
+ssh = "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q"
+ssh_copy = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub root@192.168.112.129"
+password = "root@192.168.112.128's password: "
+overwrite = "Overwrite (y/n)? "
+
 
 class AUTH_WAY
   PASSWORD = "password"

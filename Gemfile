@@ -4,4 +4,6 @@
 source "https://gems.ruby-china.com/"
 gem "net-ssh"
 gem "net-scp"
+gem "expect"
+gem 'psych', '~> 3.0'
 

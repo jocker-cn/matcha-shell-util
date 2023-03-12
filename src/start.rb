@@ -43,5 +43,47 @@ class Start
   end
 end
 
-Start.new.run(options)
+# Start.new.run(options)
+
+require 'yaml'
+
+# 要保存为YAML文件的Ruby对象
+
+class Test
+
+  attr_accessor :name, :age
+
+  def initialize(name, age)
+    @name = name
+    @age = age
+  end
+
+  def yaml_initialize(tag, properties)
+    @name = properties[:name]
+    @age = properties[:age]
+  end
+
+end
+
+class Person
+  attr_accessor :name, :age, :test
+
+  def initialize(name, age, test)
+    @name = name
+    @age = age
+    @test = test
+  end
+end
+
+require_relative './util/yaml_util'
+# p = Person.new("person",20,Test.new("test",20))
+
+# File.write("example.yml",p.to_yaml)
+# 从YAML文件加载自定义类对象
+# person = YAML.load_file("example.yml")
+person = yaml_file("example.yml") do |obj|
+  test = obj["Person"]["test"]
+  puts test
+  Person.new(obj["Person"]["name"], obj["Person"]["age"], Test.new(test["name"], test["age"]))
+end
 

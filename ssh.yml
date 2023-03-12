@@ -1,0 +1,19 @@
+ssh:
+  master: 127.0.0.1
+  network_name:
+  each_other: false
+  targets:
+    - ip: '127'
+      username: asd
+      password: '123'
+    - ip: '128'
+      username: asd
+      password: '123'
+    - ip: '128'
+      username: asd
+      password: '123'
+    - ip: '128'
+      username: asd
+      password: '123'
+  ssh_key_file: "~/.ssh/id_rsa"
+  ssh_copy_file: "~/.ssh/id_rsa.pub"
