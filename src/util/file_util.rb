@@ -38,7 +38,7 @@ def copy_files(src_dir, dst_dir, file_permissions)
       FileUtils.copy(src_dir, destination_file)
       FileUtils.chmod(file_permissions, destination_file) if file_permissions != nil
     rescue Exception => e
-      FILE_LOGGER.error_model("FILE","COPY","fail: #{e.message}")
+      FILE_LOGGER.error("file copy fail: #{e.message}")
       FileUtils.remove_file(destination_file) if is_file(destination_file)
       FileUtils.remove_dir(destination_file) if is_dir(destination_file)
       nil
@@ -54,7 +54,7 @@ def copy_single_file(src_file, dst_dir, file_permissions)
       FileUtils.copy(src_file, destination_file)
       FileUtils.chmod(file_permissions, destination_file) if file_permissions != nil
     rescue Exception => e
-      FILE_LOGGER.error_model("FILE","COPY","fail: #{e.message}")
+      FILE_LOGGER.error("file copy fail: #{e.message}")
       FileUtils.remove_file(destination_file) if is_file(destination_file)
       FileUtils.remove_dir(destination_file) if is_dir(destination_file)
       nil
@@ -69,7 +69,7 @@ def move_single_file(src_file, dst_dir, file_permissions)
     FileUtils.move(src_file, destination_file)
     FileUtils.chmod(file_permissions, destination_file) if file_permissions != nil
   rescue Exception => e
-    FILE_LOGGER.error_model("FILE","MOVE","fail: #{e.message}")
+    FILE_LOGGER.error("file move fail: #{e.message}")
     FileUtils.remove_file(destination_file) if is_file(destination_file)
     FileUtils.remove_dir(destination_file) if is_dir(destination_file)
     return
@@ -87,10 +87,10 @@ end
 
 def file_write_batch(map, encoding = "UTF-8")
   map.each do |k, v|
-    FILE_LOGGER.info_model("FILE","CREATOR","file: #{v}")
+    FILE_LOGGER.info("create file: #{v}")
     write_bytes = file_write(v, k, encoding)
     if write_bytes == nil || write_bytes < v.length
-      FILE_LOGGER.error_model("FILE","CREATOR","fail: #{v}")
+      FILE_LOGGER.error("create fail: #{v}")
       return false
     end
   end

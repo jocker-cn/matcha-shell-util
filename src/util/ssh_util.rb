@@ -3,151 +3,142 @@ require 'net/ssh'
 require 'net/scp'
 require 'pty'
 require 'expect'
+require 'ed25519'
+require 'bcrypt_pbkdf'
 
 PORT = 22
-SSH_FILE="~/.ssh/id_rsa"
-SSH_PUB_FILE="~/.ssh/id_rsa.pub"
+SSH_FILE = "~/.ssh/id_rsa"
+SSH_PUB_FILE = "~/.ssh/id_rsa.pub"
 
-ssh = "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q"
-ssh_copy = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub root@192.168.112.129"
-password = "root@192.168.112.128's password: "
-overwrite = "Overwrite (y/n)? "
+SSH_KEYGEN = "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q"
+USER_PASSWORD = "%s@%s"
+SSH_COPY = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub "
+SSH_KEY_PASSWORD = "root@192.168.112.128's password: "
+SSH_KEY_OVERWRITE = "Overwrite (y/n)? "
 
+class CoonProp
 
-class AUTH_WAY
-  PASSWORD = "password"
-  PUBLICKEY = "publickey"
-  NONE = "none"
-end
+  attr_reader :host, :port, :user, :password, :timeout, :logger, :check_host_ip
 
-class SSHOPWrapper
-  attr_reader :host, :port, :auth_methods, :user, :password, :keys, :timeout, :logger
-
-  def initialize(host, port = PORT, auth_methods, user, password, keys, timeout = 10, logger)
+  def initialize(host, port = PORT, map = {})
     @host = host
     @port = port
-    @auth_methods = auth_methods
-    @user = user
-    @password = password
-    @keys = keys
-    @timeout = timeout
-    @logger = logger
+    @user = map[:user]
+    @password = map[:password]
+    @timeout = map[:timeout]
+    @logger = map[:logger]
+    @check_host_ip = map[:check_host_ip]
+
+    @check_host_ip = false if @check_host_ip == nil
+    @timeout = 5 if @timeout == nil
+    @logger = LoggerUtil.new("SSH") if @logger == nil
+  end
+
+  def self.default(host, user, password = nil, logger = nil)
+    new(host, user, password: password, check_host_ip: false, logger: logger)
+  end
+
+  def self.default_check(host, user, check_host_ip, password = nil, logger = nil)
+    new(host, user, password: password, check_host_ip: check_host_ip, logger: logger)
   end
 
 end
 
-def ssh_none(ssh_wrapper, *shell)
-  logger = ssh_wrapper.logger
-  Net::SSH.start(
-    host: ssh_wrapper.host,
-    port: ssh_wrapper.port,
-    user: ssh_wrapper.user,
-    password: ssh_wrapper.password,
-    auth_methods: AUTH_WAY::NONE,
-    timeout: ssh_wrapper.timeout) do |ssh|
-=begin
-    shell.each { |sh|
-      ssh.exec!(sh) do |channel, stream, data|
-        return if stream == :stderr
-      end
-    }
-=end
-    ssh_channel(ssh, logger, host, shell)
+def ssh_none(coon_prop, skip = false, *shell)
+  logger = coon_prop.logger
+  result = false
+  Net::SSH.start(coon_prop.host, coon_prop.user, password: coon_prop.password, check_host_ip: coon_prop.check_host_ip) do |ssh|
+    result = ssh_channel(ssh, logger, coon_prop.host, shell_append(shell), skip: skip)
     ssh.loop
   end
-  logger.info_model("[ssh]", "[#{ssh_wrapper.host}]", "end")
+  logger.info("[#{coon_prop.host}] ssh  finish")
+  result
 end
 
-def ssh_password(ssh_wrapper, *shell)
-  logger = ssh_wrapper.logger
-  Net::SSH.start(
-    host: ssh_wrapper.host,
-    port: ssh_wrapper.port,
-    user: ssh_wrapper.user,
-    password: ssh_wrapper.password,
-    auth_methods: AUTH_WAY::PASSWORD,
-    timeout: ssh_wrapper.timeout) do |ssh|
-=begin
-    shell.each { |sh|
-      ssh.exec!(sh) do |channel, stream, data|
-        return if stream == :stderr
+def shell_append(*shell)
+  commands = ""
+  shell.each do |sh|
+    commands += "#{sh};"
+  end
+  commands
+end
+
+def channel(channel, host, logger, error_skip, command)
+  channel.exec(command) do |_, success|
+    if success
+      channel.on_data do |_, data|
+        logger.info("[#{host}]: #{data}")
       end
-    }
-=end
-    ssh_channel(ssh, logger, host, shell)
+      channel.on_extended_data do |_, type, data|
+        logger.info("[#{host}] info: #{data}") if type == 0
+        logger.error("[#{host}] error: #{data}") if type == 1
+      end
+      channel.on_request("exit-status") do |_, data|
+        logger.info("#{host}  exit-status: #{data.read_long}")
+      end
+    else
+      if error_skip
+        return false
+      end
+    end
+  end
+end
+
+def ssh_channel(ssh, logger, host, error_skip = false, *shell)
+  logger.info("[#{host}] ssh start")
+  shell.each do |command|
+    ssh.open_channel do |channel|
+      channel(channel, host, logger, error_skip, command)
+    end
+  end
+  true
+end
+
+def ssh_scp(coon_prop, local_file)
+  Net::SSH.start(coon_prop.host, coon_prop.user, password: coon_prop.password, check_host_ip: coon_prop.check_host_ip) do |ssh|
+    ssh.open_channel do |channel|
+      scp_file(channel, coon_prop.logger, local_file)
+    end
     ssh.loop
   end
-  logger.info_model("[ssh]", "[#{ssh_wrapper.host}]", "end")
 end
 
-def ssh_keys(ssh_wrapper, *shell)
-  logger = ssh_wrapper.logger
-  Net::SSH.start(
-    host: ssh_wrapper.host,
-    port: ssh_wrapper.port,
-    keys: ssh_wrapper.keys,
-    auth_methods: AUTH_WAY::PUBLICKEY,
-    timeout: ssh_wrapper.timeout) do |ssh|
-=begin
-    shell.each { |sh|
-      ssh.exec!(sh) do |channel, stream, data|
-        return if stream == :stderr
-      end
-    }
-=end
-    ssh_channel(ssh, logger, host, shell)
+def scp_file(channel, logger, local_file)
+  unless File.exist?(local_file)
+    logger.error("scp file fail: #{local_file} does not exist")
+    return false
+  end
+
+  channel.exec("scp -t #{local_file}") do |ch, success|
+    unless success
+      logger.error("SCP failed to start session: #{ch[:data]}")
+      return false
+    end
+
+    # Send file content to remote host
+    File.open(local_file, 'rb') do |file|
+      ch.send_data("C0644 #{File.size(local_file)} #{File.basename(local_file)}\n")
+      ch.send_data(file.read)
+      ch.send_data("\x00")
+    end
+
+    # Signal end of file transfer
+    ch.eof!
+  end
+  true
+end
+
+def ssh_exec_file(coon_prop, local_file, error_skip)
+  Net::SSH.start(coon_prop.host, coon_prop.user, password: coon_prop.password, check_host_ip: coon_prop.check_host_ip) do |ssh|
+    ssh.open_channel do |channel|
+      scp_file(channel, coon_prop.logger, local_file)
+    end
+
+    ssh.open_channel do |channel|
+      channel(channel, coon_prop.host, coon_prop.logger, error_skip, "bash #{local_file}")
+    end
     ssh.loop
   end
-  logger.info_model("[ssh]", "[#{ssh_wrapper.host}]", "end")
 end
 
-def ssh_channel(ssh, logger, host, *shell)
-  logger.info_model("[ssh]", "[#{host}]", "start")
-  ssh.open_channel do |channel|
-    shell.each { |sh|
-      channel.exec(sh) do |_, success|
-        next unless success
 
-        channel.on_data do |_, data|
-          logger.info_model("[ssh]", "[#{host}]", data)
-        end
-
-        channel.on_extended_data do |_, type, data|
-          logger.info_model("[ssh]", "[#{host}]", data) if type == 0
-          logger.error_model("[ssh]", "[#{host}]", data) if type == 1
-        end
-
-        channel.on_request("exit-status") do |_, data|
-          logger.info_model("[#{host}]", "[exit-status]", data.read_long)
-        end
-      end
-    }
-    channel.on_close {}
-  end
-end
-
-def ssh_pub_pri_keys(ssh_wrapper, *shell)
-  logger = ssh_wrapper.logger
-  Net::SSH.start(
-    host: ssh_wrapper.host,
-    port: ssh_wrapper.port,
-    user: ssh_wrapper.user,
-    timeout: ssh_wrapper.timeout) do |ssh|
-    ssh_channel(ssh, logger, host, shell)
-    ssh.loop
-  end
-  logger.info_model("[ssh]", "[#{host}]", "end")
-end
-
-def ssh_scp(ssh_wrapper, local_file, remote_file)
-  Net::SSH.start(
-    host: ssh_wrapper.host,
-    port: ssh_wrapper.port,
-    user: ssh_wrapper.user,
-    password: ssh_wrapper.password,
-    forward_agent: true,
-    timeout: ssh_wrapper.timeout) do |ssh|
-    ssh.exec!("mkdir -p  #{remote_file}")
-    return ssh.scp.upload!(local_file, remote_file)
-  end
-end

@@ -2,19 +2,21 @@
 require 'logger'
 require_relative 'env_util'
 
-ERROR_TEMPLATE = "\033[0;31;1m %s \e[0m"
-INFO_TEMPLATE = "\033[0;32;1m %s \e[0m"
-WARN_TEMPLATE = "\033[0;33;1m %s\e[0m"
-MSG_MODEL_TEMPLATE = "[%s] [%s] %s"
+# [时间][IP][操作类型][日志信息]
+FIXED_FORMAT = "[%s][#{local_ip(nil)}][%s]%s \n"
+ERROR_TEMPLATE = "\033[0;31;1m#{FIXED_FORMAT} \e[0m"
+INFO_TEMPLATE = "\033[0;32;1m#{FIXED_FORMAT} \e[0m"
+WARN_TEMPLATE = "\033[0;33;1m#{FIXED_FORMAT}\e[0m"
+MSG_MODEL_TEMPLATE = "[%s] %s"
 MSG_DEFAULT_TEMPLATE = "%s"
 
 class LoggerUtil
-  def initialize(clas)
+  def initialize(op)
     @logger = Logger.new(STDOUT)
     @logger.formatter = proc do |severity, datetime, progname, msg|
+      # 日志级别模板
       msg_template = template_choose(severity)
-      msg = sprintf(msg_template, "#{msg}")
-      "[#{datetime.strftime('%H:%M:%S')}][#{local_ip(nil)}][#{clas}]#{msg} \n"
+      sprintf(msg_template, "#{datetime.strftime('%H:%M:%S')}", "#{op}", "#{msg}")
     end
   end
 
@@ -28,18 +30,6 @@ class LoggerUtil
 
   def warn(msg)
     @logger.warn(sprintf(MSG_DEFAULT_TEMPLATE, msg))
-  end
-
-  def info_model(model, op, msg)
-    @logger.info(sprintf(MSG_MODEL_TEMPLATE, model,op, msg))
-  end
-
-  def error_model(model, op, msg)
-    @logger.error(sprintf(MSG_MODEL_TEMPLATE, model, op, msg))
-  end
-
-  def warn_model(model, op, msg)
-    @logger.warn(sprintf(MSG_MODEL_TEMPLATE, model, op, msg))
   end
 
   def template_choose(severity)

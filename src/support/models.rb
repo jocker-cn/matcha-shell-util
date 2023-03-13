@@ -20,8 +20,13 @@ class Models
     @desc=MODEL_NAME[model]
     @model = model
     @args = args
+    @obj=yaml_file(model,args)
   end
 
+end
+
+#根据当前请求的模块 解析yml文件
+def yaml_file(model,args)
 
 end
 

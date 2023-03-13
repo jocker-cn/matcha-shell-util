@@ -31,7 +31,7 @@ CONTAINER_START_SHELL = SHELL::SYSTEMCTL_ + " start containerd"
 CONTAINER_STOP_SHELL = SHELL::SYSTEMCTL_ + " stop containerd"
 CONTAINER_ENABLE_SHELL = SHELL::SYSTEMCTL_ + " enable --now containerd"
 
-DOCKER_LOG = LoggerUtil.new("DockerInstaller")
+DOCKER_LOG = LoggerUtil.new("DOCKER")
 
 class DockerInstaller
   include Installer
@@ -41,17 +41,17 @@ class DockerInstaller
     @platform = get_pf(platform)
     @url = URL_PRE + "#{@platform}" + "/docker-" + "#{@version}" + URL_POST
     @file = sprintf(CHUNK_FILE, "#{@version}")
-    DOCKER_LOG.info_model("DOCKER", "INSTALL", "version: #{@version} platform: #{@platform} init...")
+    DOCKER_LOG.info("install, version: #{@version} platform: #{@platform} init...")
   end
 
   def download
-    DOCKER_LOG.info_model("DOCKER", "DOWNLOAD", "url: #{@url} ...")
+    DOCKER_LOG.info("download url: #{@url} ...")
     re_download(@url, @file)
   end
 
   def install_pre
     unless is_installed
-      DOCKER_LOG.info_model("DOCKER", "INSTALL", "docker already installed")
+      DOCKER_LOG.info("docker already installed: skip")
       return false
     end
 
@@ -65,7 +65,7 @@ class DockerInstaller
         end
       end
     else
-      DOCKER_LOG.error_model("DOCKER", "DOWNLOAD", "docker download fail: #{result.error_obj}")
+      DOCKER_LOG.error("Installation package download fail: #{result.error_obj}")
     end
     false
   end
@@ -96,16 +96,15 @@ class DockerInstaller
   end
 
   def install_file
-    DOCKER_LOG.info_model("DOCKER", "CREATOR", "create service file")
     file_write_batch({ DOCKER_DAEMON_FILE => DOCKER_DAEMON, DOCKER_SERVICE_FILE => DOCKER_SERVICE, CONTAINERD_FILE => CONTAINERD_SERVICE, DOCKER_SOCKET_FILE => DOCKER_SOCKET })
   end
 
   def exec_shell(shell, *args)
     executor = ShellExecutor.new(shell, *args)
-    DOCKER_LOG.info_model("DOCKER", "EXEC", "#{executor.shell}")
+    DOCKER_LOG.info("docker exec #{executor.shell}")
     executor.exec
     unless executor.is_success
-      DOCKER_LOG.error_model("DOCKER", "EXEC", "faile: #{executor.shell} #{executor.stderr}")
+      DOCKER_LOG.error("docker exec faile: #{executor.shell} #{executor.stderr}")
     end
     executor.is_success
   end
@@ -137,5 +136,3 @@ class DockerInstaller
 
   private :install_file, :start_docker
 end
-
-DockerInstaller.new(nil, nil).install

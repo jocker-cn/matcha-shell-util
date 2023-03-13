@@ -8,7 +8,6 @@ class ModelWrapper
   def initialize(map)
     @mms = {}
     modified_map = map.map.with_index do |k, v|
-      LOGGER.info_model(k, v, "ModelWrapper creator")
       [creator(k, v), order(k)]
     end
     @mms.merge!(modified_map.to_h)

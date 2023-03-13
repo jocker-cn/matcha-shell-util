@@ -5,9 +5,10 @@
 require 'optparse'
 require_relative './util/constant'
 require_relative './util/logger_util'
+require_relative './util/ssh_util'
 require_relative './support/support'
 
-APP_RUN_LOGGER = LoggerUtil.new("start")
+APP_RUN_LOGGER = LoggerUtil.new("MATCHA")
 
 options = {}
 OptionParser.new do |opts|
@@ -37,11 +38,10 @@ end.parse!
 
 class Start
   def run(options)
-    APP_RUN_LOGGER.info_model("matcha", "shell", "start")
-    APP_RUN_LOGGER.info_model("matcha", "request", options.to_s)
+    APP_RUN_LOGGER.info("matcha start")
+    APP_RUN_LOGGER.info("matcha request #{options.to_s}")
     Support.new(options).call
   end
 end
 
 Start.new.run(options)
-
