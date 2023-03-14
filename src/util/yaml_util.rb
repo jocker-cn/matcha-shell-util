@@ -16,5 +16,5 @@ def yaml_write(obj, src_file)
 end
 
 def is_ruby_yaml(yaml)
-  yaml.to_s.include?("!ruby/object:Test")
+  yaml.to_s.include?("!ruby/object:")
 end

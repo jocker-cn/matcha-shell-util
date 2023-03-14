@@ -31,6 +31,10 @@ class SSH
   def to_s
     "<ssh: master: #{@master}, network_name: #{@network_name}, unite_username: #{@unite_username}, unite_password: #{@unite_password}, each_other: #{@each_other}, targets: #{@targets}, ssh_key_file: #{@ssh_key_file}, ssh_copy_file: #{@ssh_copy_file}>"
   end
+
+  def is_local
+    @master == local_ip(nil)
+  end
 end
 
 class Target
@@ -41,6 +45,10 @@ class Target
     @ip = ip
     @username = username
     @password = password
+  end
+
+  def user_ip
+    @username + "@" + @ip
   end
 end
 

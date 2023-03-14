@@ -16,6 +16,17 @@ SSH_COPY = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub "
 SSH_KEY_PASSWORD = "root@192.168.112.128's password: "
 SSH_KEY_OVERWRITE = "Overwrite (y/n)? "
 
+class Console
+  attr_reader :frequency, :match
+
+  def initialize(frequency, timeout, match = {})
+    @frequency = frequency
+    @match = match
+    @timeout = timeout
+  end
+
+end
+
 class CoonProp
 
   attr_reader :host, :port, :user, :password, :timeout, :logger, :check_host_ip
@@ -141,4 +152,21 @@ def ssh_exec_file(coon_prop, local_file, error_skip)
   end
 end
 
-
+def interactive_command(command, console)
+  return if console == nil || (map = console.match).empty?
+  frequency = console.frequency
+  PTY.spawn(command) do |r, w, pid|
+    while (frequency) != 0 do
+      if r.expect(/:/, console.timeout) do |ma|
+        map.each do |k, v|
+          if ma.to_s.match?(/#{k}/)
+            INTERACT_LOGGER.info("match : #{ma}")
+            w.puts "#{v}"
+          end
+        end
+        frequency -= 1
+      end
+      end
+    end
+  end
+end
