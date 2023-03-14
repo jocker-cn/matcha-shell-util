@@ -11,7 +11,6 @@ class SSHExecutor < ExecutorOpt
   def initialize(models)
     ssh_obj = convert_ssh
 
-
   end
 
   def model

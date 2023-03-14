@@ -26,6 +26,7 @@ class SSH
 
     @ssh_key_file = "~/.ssh/id_rsa" if @ssh_key_file == nil
     @ssh_copy_file = "~/.ssh/id_rsa.pub" if @ssh_copy_file == nil
+    @is_local = is_local
   end
 
   def to_s
@@ -35,21 +36,33 @@ class SSH
   def is_local
     @master == local_ip(nil)
   end
+
 end
 
 class Target
 
-  attr_reader :ip, :username, :password
+  attr_reader :ip, :username, :password, :user_ip, :interactive_password, :interactive_overwrite
 
   def initialize(ip, username, password)
     @ip = ip
     @username = username
     @password = password
+    @user_ip = @username + "@" + @ip
+    # ssh 密码交互匹配
+    @interactive_password = interactive_password
+    @interactive_overwrite = interactive_overwrite
+
+    @ssh_copy_shell = SSH_COPY + @ip
   end
 
-  def user_ip
-    @username + "@" + @ip
+  def interactive_password
+    @user_ip + "'s password: "
   end
+
+  def interactive_overwrite
+    "Overwrite (y/n)? "
+  end
+
 end
 
 def yaml_to_ssh(yaml)
