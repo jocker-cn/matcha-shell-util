@@ -44,4 +44,49 @@ class Start
   end
 end
 
-Start.new.run(options)
+# Start.new.run(options)
+
+# 连接远程主机
+require 'net/ssh'
+
+# Net::SSH.start('192.168.112.129', 'test', password: '123456') do |ssh|
+#   # 假设此命令需要输入 Y/N 响应
+#   ssh.exec!("ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub test@192.168.112.128") do |ch, stream, data|
+#     if data =~ /password:/
+#       # 模拟输入 Y 响应
+#       ch.send_data("123456\n")
+#     else
+#       # 输出命令的输出
+#       puts data
+#     end
+#   end
+# end
+
+# s = "[y/N]：".to_s.dup.force_encoding('ASCII-8BIT')
+s1 = "password: ".to_s.dup.force_encoding('ASCII-8BIT')
+
+Net::SSH.start("192.168.112.129", "test", password: "123456") do |ssh|
+  ssh.open_channel do |channel|
+    spawn_instance = RubyExpect::Expect.spawn("ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub test6@192.168.112.128",pty: true)
+    # spawn_instance = RubyExpect::Expect.spawn("touch /tmp/test1.bak")
+    # spawn_instance.timeout = 10
+
+    spawn_instance.procedure do
+      any do
+        expect s1 do
+          send '123456'
+        end
+      end
+      begin
+        each do
+          expect /\$\s+$/ do
+            send 'exit'
+          end
+        end
+      rescue Exception => e
+        puts e
+      end
+    end
+    ssh.loop
+  end
+end

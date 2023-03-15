@@ -4,7 +4,7 @@ require_relative '../util/yaml_util'
 
 class SSH
 
-  attr_reader :master, :network_name, :unite_username, :unite_password, :each_other, :targets, :ssh_key_file, :ssh_copy_file
+  attr_reader :master, :network_name, :unite_username, :unite_password, :each_other, :targets, :ssh_pub_key, :authorized_keys, :is_local
 
   def initialize(args = {})
     @master = args[:master]
@@ -21,11 +21,11 @@ class SSH
 
     raise "Source ips is empty, the yaml prop for 'target:[]' " if @targets.length == 0
 
-    @ssh_key_file = args[:ssh_key_file]
-    @ssh_copy_file = args[:ssh_copy_file]
+    @ssh_pub_key = args[:ssh_pub_key]
+    @authorized_keys = args[:authorized_keys]
 
-    @ssh_key_file = "~/.ssh/id_rsa" if @ssh_key_file == nil
-    @ssh_copy_file = "~/.ssh/id_rsa.pub" if @ssh_copy_file == nil
+    @ssh_pub_key = "~/.ssh/id_rsa.pub" if @ssh_pub_key == nil
+    @authorized_keys = "~/.ssh/authorized_keys" if @authorized_keys == nil
     @is_local = is_local
   end
 
@@ -49,17 +49,17 @@ class Target
     @password = password
     @user_ip = @username + "@" + @ip
     # ssh 密码交互匹配
-    @interactive_password = interactive_password
-    @interactive_overwrite = interactive_overwrite
+    @interactive_password = match_password_pre
+    @interactive_overwrite = overwrite_keys
 
     @ssh_copy_shell = SSH_COPY + @ip
   end
 
-  def interactive_password
+  def match_password_pre
     @user_ip + "'s password: "
   end
 
-  def interactive_overwrite
+  def overwrite_keys
     "Overwrite (y/n)? "
   end
 
@@ -77,8 +77,8 @@ def yaml_to_ssh(yaml)
       unite_username: obj["unite_username"],
       unite_password: obj["unite_password"],
       each_other: obj["each_other"],
-      ssh_key_file: obj ["ssh_key_file"],
-                        ssh_copy_file: obj["ssh_copy_file"],
-                        targets: targets)
+      authorized_keys: obj ["ssh_pub_key"],
+                           authorized_keys: obj["authorized_keys"],
+                           targets: targets)
   end
 end

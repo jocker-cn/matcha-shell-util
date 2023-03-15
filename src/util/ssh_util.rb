@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 require 'net/ssh'
 require 'net/scp'
-require 'pty'
-require 'expect'
 require 'ed25519'
 require 'bcrypt_pbkdf'
+require 'ruby_expect'
 
 PORT = 22
 SSH_FILE = "~/.ssh/id_rsa"
@@ -16,7 +15,7 @@ SSH_KEY_PASSWORD = "root@192.168.112.128's password: "
 SSH_KEY_OVERWRITE = "Overwrite (y/n)? "
 
 class Console
-  attr_reader :frequency, :match
+  attr_reader :frequency, :match, :timeout
 
   def initialize(frequency, timeout, match = {})
     @frequency = frequency
@@ -151,21 +150,27 @@ def ssh_exec_file(coon_prop, local_file, error_skip)
   end
 end
 
-def interactive_command(command, console)
-  return if console == nil || (map = console.match).empty?
-  frequency = console.frequency
-  PTY.spawn(command) do |r, w, pid|
-    while (frequency) != 0 do
-      if r.expect(/:/, console.timeout) do |ma|
-        map.each do |k, v|
-          if ma.to_s.match?(/#{k}/)
-            INTERACT_LOGGER.info("match : #{ma}")
-            w.puts "#{v}"
-          end
-        end
-        frequency -= 1
-      end
+def interactive_current_command(command, &block)
+  spawn_instance = RubyExpect::Expect.spawn(command)
+  spawn_instance.procedure do
+    block.call
+    each do
+      expect /\$\s+$/ do
+        send 'exit'
       end
     end
   end
 end
+
+
+
+# any do
+#   expect s do
+#     puts "y"
+#     send 'y'
+#   end
+#   expect s1 do
+#     puts "123456"
+#     send '123456'
+#   end
+# end
