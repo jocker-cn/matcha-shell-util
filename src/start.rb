@@ -10,37 +10,27 @@ require_relative './support/support'
 
 APP_RUN_LOGGER = LoggerUtil.new("MATCHA")
 
+ARGS = ARGV
 options = {}
+=begin
 OptionParser.new do |opts|
-  OP_COLL_ARRAY.each { |k|
-    opk = k.get_option
-    opts.on(opk, k.get_option_alisa, k.get_elem, k.get_option_type, k.help) do |files|
-      options["#{opk}"] = files
-      options["#{opk}"] += ARGV.take_while { |arg| arg !~ /^-/ }
-    end
-  }
-
-  OP_COLL_ONE_ARGS.each { |k|
-    opk = k.get_option
-    opts.on(opk, k.get_option_alisa, k.get_elem, k.get_option_type, k.help) do |files|
-      options["#{opk}"] = files
-      options["#{opk}"] += ARGV.take_while { |arg| arg !~ /^-/ } if k.get_elem.class == Array.class
-    end
-  }
-
-  OP_COLL_NO_ARGS.each { |k|
-    opk = k.get_option
-    opts.on(opk, k.get_option_alisa, k.get_elem, k.get_option_type, k.help) do |files|
-      options["#{opk}"] = files
-    end
-  }
+  opts.on("", k.get_option_alisa, k.get_elem, k.get_option_type, k.help) do |files|
+    options["#{opk}"] = files
+  end
 end.parse!
+=end
 
 class Start
   def run(options)
     APP_RUN_LOGGER.info("matcha start")
     APP_RUN_LOGGER.info("matcha request #{options.to_s}")
-    Support.new(options).call
+    Support.new.call
+  end
+end
+
+class ArgsParse
+  def initialize(args)
+    args
   end
 end
 
@@ -49,28 +39,16 @@ end
 # 连接远程主机
 require 'net/ssh'
 
-# Net::SSH.start('192.168.112.129', 'test', password: '123456') do |ssh|
-#   # 假设此命令需要输入 Y/N 响应
-#   ssh.exec!("ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub test@192.168.112.128") do |ch, stream, data|
-#     if data =~ /password:/
-#       # 模拟输入 Y 响应
-#       ch.send_data("123456\n")
-#     else
-#       # 输出命令的输出
-#       puts data
-#     end
-#   end
-# end
-
 # s = "[y/N]：".to_s.dup.force_encoding('ASCII-8BIT')
 s1 = "password: ".to_s.dup.force_encoding('ASCII-8BIT')
 
-Net::SSH.start("192.168.112.129", "test", password: "123456") do |ssh|
+=begin
+Net::SSH.start("192.168.112.129", "root", password: "123456") do |ssh|
   ssh.open_channel do |channel|
-    spawn_instance = RubyExpect::Expect.spawn("ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub test6@192.168.112.128",pty: true)
-    # spawn_instance = RubyExpect::Expect.spawn("touch /tmp/test1.bak")
-    # spawn_instance.timeout = 10
+    channel(channel, "192.168.112.129", LoggerUtil.new("test"), "ls /root")
+  end
 
+    spawn_instance = RubyExpect::Expect.spawn("ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub test6@192.168.112.128",pty: true)
     spawn_instance.procedure do
       any do
         expect s1 do
@@ -87,6 +65,23 @@ Net::SSH.start("192.168.112.129", "test", password: "123456") do |ssh|
         puts e
       end
     end
-    ssh.loop
-  end
+
+  ssh.loop
 end
+=end
+
+# s = " matcha ssh -i localhost -u test -p 123456 -s  192.168.1.2,192.168.1.3,192.168.1.4"
+
+ar = %w[-i localhost -s 192.168.1.2,192.168.1.3,192.168.1.4]
+
+op = {}
+
+while ar.length != 0
+  op["#{ar.shift}"] = [ar.shift]
+end
+
+puts op
+
+
+
+

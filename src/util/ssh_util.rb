@@ -60,7 +60,6 @@ def ssh_none(coon_prop, skip = false, *shell)
     result = ssh_channel(ssh, logger, coon_prop.host, shell_append(shell), skip: skip)
     ssh.loop
   end
-  logger.info("[#{coon_prop.host}] ssh  finish")
   result
 end
 
@@ -72,32 +71,38 @@ def shell_append(*shell)
   commands
 end
 
-def channel(channel, host, logger, error_skip, command)
+def channel(channel, host, logger, command)
+  result = true
   channel.exec(command) do |_, success|
-    if success
-      channel.on_data do |_, data|
-        logger.info("[#{host}]: #{data}")
-      end
-      channel.on_extended_data do |_, type, data|
-        logger.info("[#{host}] info: #{data}") if type == 0
-        logger.error("[#{host}] error: #{data}") if type == 1
-      end
-      channel.on_request("exit-status") do |_, data|
-        logger.info("#{host}  exit-status: #{data.read_long}")
-      end
-    else
-      if error_skip
-        return false
+    unless success
+      result = false
+      logger.error("command execute failed")
+    end
+    channel.on_data do |_, data|
+      logger.info("#{host} result: #{data}")
+    end
+    channel.on_extended_data do |_, type, data|
+      logger.info("#{host} info: #{data}") if type == 0
+      if type == 1
+        logger.error("#{host} error: #{data}")
+        result = false
       end
     end
+    channel.on_request("exit-status") do |_, data|
+      logger.info("#{host}  exit-status: #{data.read_long}")
+    end
+    channel.on_close do |ch|
+      logger.info("#{host}  channel is closing!")
+    end
   end
+  result
 end
 
-def ssh_channel(ssh, logger, host, error_skip = false, *shell)
+def ssh_channel(ssh, logger, host, *shell)
   logger.info("[#{host}] ssh start")
   shell.each do |command|
     ssh.open_channel do |channel|
-      channel(channel, host, logger, error_skip, command)
+      channel(channel, host, logger, command)
     end
   end
   true
@@ -137,14 +142,14 @@ def scp_file(channel, logger, local_file)
   true
 end
 
-def ssh_exec_file(coon_prop, local_file, error_skip)
+def ssh_exec_file(coon_prop, local_file)
   Net::SSH.start(coon_prop.host, coon_prop.user, password: coon_prop.password, check_host_ip: coon_prop.check_host_ip) do |ssh|
     ssh.open_channel do |channel|
       scp_file(channel, coon_prop.logger, local_file)
     end
 
     ssh.open_channel do |channel|
-      channel(channel, coon_prop.host, coon_prop.logger, error_skip, "bash #{local_file}")
+      channel(channel, coon_prop.host, coon_prop.logger, "bash #{local_file}")
     end
     ssh.loop
   end
@@ -161,8 +166,6 @@ def interactive_current_command(command, &block)
     end
   end
 end
-
-
 
 # any do
 #   expect s do

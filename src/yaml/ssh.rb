@@ -37,6 +37,10 @@ class SSH
     @master == local_ip(nil)
   end
 
+  def add_targets(targets)
+    @targets.concat(targets)
+  end
+
 end
 
 class Target

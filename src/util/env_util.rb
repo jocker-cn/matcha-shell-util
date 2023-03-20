@@ -77,6 +77,13 @@ def is_platform(platform)
   nil
 end
 
+def is_local_ip(ip)
+  if ip.eql?("localhost") || ip.eql?("127.0.0.1") || ip.eql?(local_ip(nil))
+    true
+  end
+  false
+end
+
 def local_ip(network_name)
   # 获取当前机器正在使用的网卡信息
   if_addrs = Socket.getifaddrs.select { |if_addr| if_addr.addr&.ipv4? && !if_addr.flags & Socket::IFF_LOOPBACK != 0 }
