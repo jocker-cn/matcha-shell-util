@@ -1,7 +1,7 @@
 # frozen_string_literal: true
-require_relative 'docker_executor'
+
 require_relative 'harbor_executor'
-require_relative 'kub_executor'
+
 require_relative 'shell_executor'
 
 INSTALL_MODEL =

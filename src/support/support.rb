@@ -2,15 +2,14 @@
 
 require_relative 'args_resolve'
 
-
-def choose_resolve(key)
-  if key != nil
-    SSH_ARGS[:"#{key.to_s.downcase}"]
-  end
-end
-
-
 class Support
-  def initialize
+
+  def initialize(parse, options)
+    @args_resolve = parse,
+    @options = options
+  end
+
+  def do
+    # code here
   end
 end

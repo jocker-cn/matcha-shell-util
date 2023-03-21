@@ -2,10 +2,10 @@
 require 'fileutils'
 require_relative './logger_util'
 
+FILE_LOGGER = LoggerUtil.new("FILE")
 
-FILE_LOGGER= LoggerUtil.new("FILE")
 def is_file(file)
-  File.file?(file)
+  file != nil && File.file?(file)
 end
 
 def is_dir(file)
