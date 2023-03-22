@@ -11,7 +11,7 @@ class SSH
     @master = args[:master]
     @network_name = args[:@network_name]
     @master = local_ip(@network_name) if @master == nil
-    @unite_username = args[:@unite_username]
+    @unite_username = args[:unite_username]
     @unite_password = args[:unite_password]
     @each_other = args[:each_other]
     @each_other = false if @each_other == nil
@@ -20,7 +20,7 @@ class SSH
 
     @targets = args[:targets]
 
-    abort "Source ips is empty, the yaml prop for 'target:[]' " if @targets.length == 0
+    abort "Source ips is empty, the yaml prop for 'target:[]' " if @targets == nil || @targets.length == 0
 
     @ssh_pub_key = args[:ssh_pub_key]
     @authorized_keys = args[:authorized_keys]
@@ -28,6 +28,19 @@ class SSH
     @ssh_pub_key = "~/.ssh/id_rsa.pub" if @ssh_pub_key == nil
     @authorized_keys = "~/.ssh/authorized_keys" if @authorized_keys == nil
     @is_local = local
+  end
+
+  def self.example
+    return SSH.new(
+      master: "127.0.0.1",
+      network_name: "eth0",
+      unite_username: "root",
+      unite_password: "123456",
+      each_other: true,
+      ssh_pub_key: "~/.ssh/id_rsa.pub",
+      authorized_keys: "~/.ssh/authorized_keys",
+      targets: Target.demo2
+    )
   end
 
   def to_s

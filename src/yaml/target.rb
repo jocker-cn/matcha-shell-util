@@ -26,4 +26,7 @@ class Target
     "Overwrite (y/n)? "
   end
 
+  def self.demo2
+    return [Target.new("127.0.0.1", "test", "123456"), Target.new("128.0.0.2", "", "")]
+  end
 end

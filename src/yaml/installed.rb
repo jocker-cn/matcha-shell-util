@@ -2,7 +2,9 @@
 
 # 这个是支持安装的模块
 # 暂时只支持docker
-class Installer
+class Installed
+
+
 
 end
 

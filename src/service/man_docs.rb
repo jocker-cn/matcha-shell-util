@@ -3,15 +3,16 @@
 
 ALL_MAN="Support:
       MODEL_NAME: schedule[sc]
-      MODEL_DESC: 对命令和脚本的调度模块ssh
-             USE: use `matcha support sc` see see details
+      MODEL_DESC: scheduling module for commands and scripts [ssh]
+             USE: u can use `matcha support sc` see the details
 
       MODEL_NAME: ssh
-      MODEL_DESC: 批量完成指定节点的SSH互信工作
-             USE: use `matcha support ssh` see details "
+      MODEL_DESC: complete the SSH mutual trust work of the specified nodes in batches
+             USE: u can use `matcha support ssh` see the details "
 
 
-SCHEDULE_MAN = "MODEL_NAME:         schedule
+SCHEDULE_MAN="Support:
+MODEL_NAME:         schedule
 MODEL_DESCRIPTION:  Used for scheduling jobs for commands or executable scripts.
                     This operation schedules the content of your command or script on the specified machine and executes it.
                     The IP address and username of the target machine must be specified during scheduling, and the target username@ip
@@ -39,7 +40,8 @@ MODEL_DESCRIPTION:  Used for scheduling jobs for commands or executable scripts.
              example: matcha sc -c 'touch /tmp/sc' -u root -p root -s 192.168.111.10,192.168.111.11,192.168.111.12"
 
 
-SSH_MAN="MODEL_NAME:         ssh
+SSH_MAN="Support:
+MODEL_NAME:         ssh
 MODEL_DESCRIPTION:  Establishes SSH key exchange between specified machines.
                     This operation first generates a key on the local machine using ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q.
                     Then, it uses `ssh-copy-id` to establish SSH key exchange between the specified machines and the target machine.

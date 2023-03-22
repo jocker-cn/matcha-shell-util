@@ -6,9 +6,9 @@ def get_pwd
 end
 
 def get_user
-  Etc.getpwuid(Process.uid).freeze
+  Etc.getpwuid(Process.uid).name
 end
 
 def get_group
-  Etc.getgrgid(Process.gid).freeze
+  Etc.getgrgid(Process.gid).name
 end

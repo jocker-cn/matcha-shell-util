@@ -1,0 +1,22 @@
+--- !ruby/object:Schedule
+#需要调度的命令
+command: touch /tmp/test
+#corn表达式
+corn: "* * * * * *"
+#是否只执行一次
+once: false
+#是否仅是本地执行
+is_local: false
+targets:
+- !ruby/object:Target
+  #第一台目标机器地址
+  ip: 127.0.0.1
+  #用户名
+  username: test
+  #密码
+  password: '123456'
+- !ruby/object:Target
+  #目标调度机器地址  不写用户密码则要求该地址与当前执行脚本的机器能够进行ssh
+  ip: 128.0.0.2
+#需要调度的文件
+exec_file: "/tmp/test.sh"

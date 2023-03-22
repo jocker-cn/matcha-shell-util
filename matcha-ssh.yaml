@@ -1,0 +1,24 @@
+--- !ruby/object:SSH
+#源ip地址 操作将从该地址发起 可选参数 默认为127.0.0.1
+master: 127.0.0.1
+#源ip地址的网卡名称 可选参数
+network_name:
+#联合用户名密码
+unite_username: root
+#联合用户密码
+unite_password: '123456'
+# ssh操作是否是相互进行
+each_other: true
+targets:
+- !ruby/object:Target
+  #目标ip
+  ip: 127.0.0.1
+  #目标机器的用户名 不写默认取联合用户名
+  username: ''
+  #目标机器的密码 不写默认取联合密码
+  password: ''
+- !ruby/object:Target
+  #第二台机器信息 同上
+  ip: 128.0.0.2
+  username: ''
+  password: ''

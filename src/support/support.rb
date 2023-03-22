@@ -10,6 +10,6 @@ class Support
   end
 
   def do
-    # code here
+    obj = @args_resolve.options(@options)
   end
 end

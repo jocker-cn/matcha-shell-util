@@ -160,14 +160,14 @@ def interactive_current_command(command, &block)
   spawn_instance.procedure do
     block.call
     each do
-      expect /\$\s+$/ do
+      expect(/\$\s+$/) do
         send 'exit'
       end
     end
   end
 end
 
-#s = "password: ".to_s.dup.force_encoding('ASCII-8BIT')
+# s = "password: ".to_s.dup.force_encoding('ASCII-8BIT')
 # any do
 #   expect s do
 #     puts "y"

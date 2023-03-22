@@ -25,13 +25,23 @@ class Schedule
     args_check
   end
 
+  def self.example
+    Schedule.new(
+      command: "touch /tmp/test",
+      corn: "* * * * * *",
+      is_local: false,
+      exec_file: "/tmp/test.sh",
+      targets: Target.demo2
+    )
+  end
+
   def args_check
     # 是命令
     unless @command != nil || @exec_file != nil
       abort "Schedule model: @command or @exec_file both cannot be nil"
     end
 
-    if @is_local || !@targets.empty?
+    if !@is_local && @targets.empty?
       abort "Schedule model: @is_local or @targets both cannot be nil"
     end
   end

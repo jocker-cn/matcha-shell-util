@@ -4,6 +4,8 @@ require_relative '../util/file_util'
 require_relative '../yaml/ssh'
 require_relative '../yaml/schedule'
 require_relative '../service/man_docs'
+require_relative '../service/yaml_template'
+
 
 class ArgsResolve
   def resolve(option) end
@@ -122,8 +124,18 @@ end
 
 class YamlResolve < ArgsResolve
 
-  def resolve(option)
+  YAML_TEMPLATE = {
+    "ssh" => "matcha-ssh.yaml",
+    "sc" => "matcha-sc.yaml",
+    # "install" => Installed.new
+  }
 
+  def resolve(option)
+    key = option.keys[0]
+    obj = YAML_TEMPLATE[key]
+    abort "No supported model #{option} content was found. Please try [matcha support all] to view the supported content." if obj == nil
+    writer_obj(key,obj)
+    exit 0
   end
 
 end
@@ -137,9 +149,11 @@ class SupportResolve < ArgsResolve
   }
 
   def resolve(option)
-    help_man = CONTEXT[option]
-    abort "No supported model #{option} content was found. Please try [matcha support all] to view the supported content." if help_man == nil
+    key = option.keys[0]
+    help_man = CONTEXT[key]
+    abort "No supported model #{key} content was found. Please try [matcha support all] to view the supported content." if help_man == nil
     puts help_man
+    exit 0
   end
 end
 
