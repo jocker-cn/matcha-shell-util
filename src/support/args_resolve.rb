@@ -3,6 +3,7 @@ require_relative '../util/env_util'
 require_relative '../util/file_util'
 require_relative '../yaml/ssh'
 require_relative '../yaml/schedule'
+require_relative '../service/man_docs'
 
 class ArgsResolve
   def resolve(option) end
@@ -113,7 +114,6 @@ class ScheduledResolve < ArgsResolve
 
     schedule
   end
-
 end
 
 class InstallResolve < ArgsResolve
@@ -121,11 +121,26 @@ class InstallResolve < ArgsResolve
 end
 
 class YamlResolve < ArgsResolve
-  def resolve(option) end
+
+  def resolve(option)
+
+  end
+
 end
 
 class SupportResolve < ArgsResolve
-  def resolve(option) end
+
+  CONTEXT = {
+    "all" => ALL_MAN,
+    "ssh" => SSH_MAN,
+    "sc" => SCHEDULE_MAN,
+  }
+
+  def resolve(option)
+    help_man = CONTEXT[option]
+    abort "No supported model #{option} content was found. Please try [matcha support all] to view the supported content." if help_man == nil
+    puts help_man
+  end
 end
 
 SSH_ARGS = {
