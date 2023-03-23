@@ -18,16 +18,23 @@ class Start
   def run(options)
     APP_RUN_LOGGER.info("[#{get_user}]request #{options.to_s}")
     args_resolve = choose_parse(options.shift)
-    Support.new(args_resolve,options).do
+    Support.new(args_resolve, options).do
   end
 end
 
-Start.new.run(ARGS)
+# Start.new.run(ARGS)
 
+require_relative 'model/ssh_executor'
 
+# local_ssh("matcha3@192.168.112.129","123456")
+#
+ssh = SSH.new(
+  master: "192.168.112.129",
+  unite_username: "t10",
+  unite_password: "123456",
+  each_other: false,
+  targets: [Target.new("192.168.112.128", "", "")]
+)
 
-
-
-
-
-
+se = SSHExecutor.new(ssh)
+se.exec

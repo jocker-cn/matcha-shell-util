@@ -3,7 +3,7 @@ require 'logger'
 require_relative 'env_util'
 
 # [时间][IP][操作类型][日志信息]
-FIXED_FORMAT = "[%s][#{local_ip(nil)}][%s]%s \n"
+FIXED_FORMAT = "[%s][%s]%s \n"
 ERROR_TEMPLATE = "\033[0;31;1m#{FIXED_FORMAT} \e[0m"
 INFO_TEMPLATE = "\033[0;32;1m#{FIXED_FORMAT} \e[0m"
 WARN_TEMPLATE = "\033[0;33;1m#{FIXED_FORMAT}\e[0m"

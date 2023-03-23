@@ -27,7 +27,8 @@ class SSH
 
     @ssh_pub_key = "~/.ssh/id_rsa.pub" if @ssh_pub_key == nil
     @authorized_keys = "~/.ssh/authorized_keys" if @authorized_keys == nil
-    @is_local = local
+    @is_local = args[:local]
+    @is_local = true if @is_local == nil
   end
 
   def self.example

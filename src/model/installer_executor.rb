@@ -17,9 +17,11 @@ INSTALL_MODEL =
     "java" => ShellExecutor,
   }
 
-class InstallerExecutor < ExecutorOpt
-  def initialize(models)
-    super(models)
+class InstallerExecutor
+  include Executors
+
+  def initialize(obj)
+
   end
 
   def exec

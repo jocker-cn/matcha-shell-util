@@ -9,11 +9,6 @@ PORT = 22
 SSH_FILE = "~/.ssh/id_rsa"
 SSH_PUB_FILE = "~/.ssh/id_rsa.pub"
 
-SSH_KEYGEN = "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q"
-SSH_COPY = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub "
-SSH_KEY_PASSWORD = "root@192.168.112.128's password: "
-SSH_KEY_OVERWRITE = "Overwrite (y/n)? "
-
 class Console
   attr_reader :frequency, :match, :timeout
 

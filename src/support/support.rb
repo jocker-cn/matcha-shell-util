@@ -6,10 +6,14 @@ class Support
 
   def initialize(parse, options)
     @args_resolve = parse,
-    @options = options
+      @options = options
   end
 
   def do
     obj = @args_resolve.options(@options)
   end
 end
+
+OP_MAPPING = {
+
+}

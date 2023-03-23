@@ -11,19 +11,19 @@ class Target
     @username = username
     @password = password
     @user_ip = "#{@username}@#{@ip}"
-    # ssh 密码交互匹配
-    @interactive_password = match_password_pre
-    @interactive_overwrite = overwrite_keys
-
-    @ssh_copy_shell = SSH_COPY + @ip
   end
 
-  def match_password_pre
-    @user_ip + "'s password: "
-  end
 
   def overwrite_keys
     "Overwrite (y/n)? "
+  end
+
+  def add_username(username)
+    @username=username
+    @user_ip = "#{@username}@#{@ip}"
+  end
+  def add_password(pwd)
+    @password = pwd
   end
 
   def self.demo2
