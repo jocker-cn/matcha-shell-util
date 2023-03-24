@@ -2,4 +2,8 @@
 
 class ScheduledExecutor
   include Executors
+
+  def initialize(obj)
+
+  end
 end

@@ -22,19 +22,4 @@ class Start
   end
 end
 
-# Start.new.run(ARGS)
-
-require_relative 'model/ssh_executor'
-
-# local_ssh("matcha3@192.168.112.129","123456")
-#
-ssh = SSH.new(
-  master: "192.168.112.129",
-  unite_username: "t10",
-  unite_password: "123456",
-  each_other: false,
-  targets: [Target.new("192.168.112.128", "", "")]
-)
-
-se = SSHExecutor.new(ssh)
-se.exec
+Start.new.run(ARGS)
