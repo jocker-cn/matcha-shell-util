@@ -5,7 +5,7 @@ require_relative 'constant'
 require_relative '../support/result'
 require_relative '../util/user_util'
 require_relative '../util/logger_util'
-HTTP_LOGGER = LoggerUtil.new("HTTP")
+HTTP_LOGGER = LoggerUtil.new("http")
 
 def url_check(url)
   return Result.new(url, Result::ERROR, "请求路径不能为空") if url.length == 0

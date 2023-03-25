@@ -22,21 +22,18 @@ MODEL_DESCRIPTION:  Used for scheduling jobs for commands or executable scripts.
                     execution modes: command-line and YAML file.
              use:   matcha sc [args]
 
-             args:  -c  (Optional: One of -c, -e must exist)
-                        Specify the command that needs to be scheduled for execution.
+             args:  -c  Specify the command that needs to be scheduled for execution.
                         Example: -c 'touch /tmp/sc'
                     -s  Specify the IP address(es) of the target machine(s) (can be multiple, separated by ',',
                         but the username and password for multiple machines must be the same).
                         Example: -s 127.0.0.1,127.0.0.2
-                    -e  (Optional: One of -c, -e must exist)
-                        Specify the executable file (can be an absolute path or a relative path from the current location).
-                        Example: -e '../test.sh'
                     -u  Specify the username of the target machine.
                         Example: -u root
                     -p  Specify the password of the target machine user.
                         Example: -p 123456
                     -f  Specify the YAML file (use matcha yaml sc to get the configurable content of the YAML file).
                         The contents of the YAML file can be mixed with command-line parameters.
+                        See the configurable content of the YAML file, use `matcha yaml sc`
                         Example: -f sc.yaml.
 
              example: matcha sc -c 'touch /tmp/sc' -u root -p root -s 192.168.111.10,192.168.111.11,192.168.111.12

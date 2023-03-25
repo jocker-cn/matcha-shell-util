@@ -35,7 +35,7 @@ class CoonProp
 
     @check_host_ip = false if @check_host_ip == nil
     @timeout = 5 if @timeout == nil
-    @logger = LoggerUtil.new("SSH") if @logger == nil
+    @logger = LoggerUtil.new("ssh") if @logger == nil
   end
 
   def self.default(host, user, password = nil, logger = nil)

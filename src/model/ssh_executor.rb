@@ -4,7 +4,7 @@ require 'ruby_expect'
 
 require_relative 'executors'
 
-SSH_LOGGER = LoggerUtil.new("SSH")
+SSH_LOGGER = LoggerUtil.new("ssh")
 
 SSH_KEYGEN = "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N '' -q"
 SSH_COPY = "ssh-copy-id -o  StrictHostKeyChecking=no -i  ~/.ssh/id_rsa.pub %s"
@@ -111,7 +111,7 @@ class SSHExecutor
           SSH_LOGGER.info("[#{ip}] Overwrite ssh_key: No")
           send "n\n"
         end
-        expect /\$\s*$/ do
+        expect(/\$\s*$/) do
           send ""
         end
       end
@@ -139,7 +139,7 @@ def local_ssh(source_ip_info, password)
             SSH_LOGGER.info("[#{ip}] #{match_ssh_info} ")
             send password
           end
-          expect /\$\s*$/ do
+          expect(/\$\s*$/) do
             send "exit"
           end
         end
@@ -167,11 +167,11 @@ def other_ssh(init_ip, source_ip)
     while eval != 1
       eval = any do
         # 登录密码匹配
-        expect /password:\s*$/ do
+        expect(/password:\s*$/) do
           send "#{init_ip.password}"
         end
         # 构建本地密钥
-        expect /\$\s*$/ do
+        expect(/\$\s*$/) do
           SSH_LOGGER.info("[#{init_ip.ip}] #{SSH_KEYGEN}")
           send SSH_KEYGEN
         end
@@ -194,7 +194,7 @@ def other_ssh(init_ip, source_ip)
 
     # ssh 互信
     any do
-      expect /\$\s*$/ do
+      expect(/\$\s*$/) do
         send ssh_copy_command
         SSH_LOGGER.info("[#{init_ip.ip}] #{ssh_copy_command} ")
       end
@@ -209,12 +209,12 @@ def other_ssh(init_ip, source_ip)
           SSH_LOGGER.info("[#{init_ip.ip}] fingerprint match: yes ")
         end
 
-        expect /password:\s*$/ do
+        expect(/password:\s*$/) do
           send source_ip.password
           SSH_LOGGER.info("[#{init_ip.ip}] #{match_ssh_info} ")
         end
 
-        expect  /\$\s*$/ do
+        expect(/\$\s*$/) do
           send "exit"
         end
       end

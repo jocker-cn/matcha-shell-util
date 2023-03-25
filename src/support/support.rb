@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
-require_relative 'args_resolve'
+require_relative './args_resolve'
 require_relative '../model/ssh_executor'
 require_relative '../model/installer_executor'
 require_relative '../model/scheduled_executor'
 
 class Support
-
   def initialize(parse, options)
-    @args_resolve = parse,
-      @options = options
+    @args_resolve = parse
+    @options = options
   end
 
-  def do
+  def do_it
     obj = @args_resolve.options(@options)
 
     executor = choose_executor(@args_resolve,obj)
 
     abort "not support the model: #{model}. you can use 'matcha support all' for help " if executor == nil
 
-    executor.new(obj).exec
+    executor.exec
   end
 end
 

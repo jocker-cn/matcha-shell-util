@@ -3,9 +3,13 @@
 # -*- coding: UTF-8 -*-
 
 require_relative './support/args_resolve'
+require_relative './support/support'
 require_relative './util/user_util'
 
-APP_RUN_LOGGER = LoggerUtil.new("MATCHA")
+
+$work_dir="/opt/.matcha"
+
+APP_RUN_LOGGER = LoggerUtil.new("matcha")
 ARGS = ARGV
 
 def choose_parse(model)
@@ -16,10 +20,11 @@ end
 
 class Start
   def run(options)
-    APP_RUN_LOGGER.info("[#{get_user}]request #{options.to_s}")
+    APP_RUN_LOGGER.info("[#{get_user}] args: #{options.to_s}")
     args_resolve = choose_parse(options.shift)
-    Support.new(args_resolve, options).do
+    Support.new(args_resolve, options).do_it
   end
 end
 
 Start.new.run(ARGS)
+

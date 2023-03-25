@@ -3,19 +3,20 @@ require_relative 'target'
 
 class Schedule
 
-  attr_reader :tasks, :targets
+  attr_reader :unit_username, :unit_password, :tasks, :targets
 
   def initialize(sc = {})
+    @unit_username = sc[:unit_username]
+    @unit_password = sc[:unit_password]
     @tasks = sc[:tasks]
     @targets = sc[:targets]
   end
 
   def self.example
     Schedule.new(
-      command: "touch /tmp/test",
-      corn: "* * * * * *",
-      is_local: false,
-      exec_file: "/tmp/test.sh",
+      unit_username: "root",
+      unit_password: "123456",
+      tasks: Task.demo2,
       targets: Target.demo2
     )
   end
@@ -26,14 +27,17 @@ class Schedule
       obj["schedule"]["target"].each { |target|
         targets.push(Target.new(target["ip"], target["username"], target["password"]))
       }
+      tasks = []
+      obj["schedule"]["tasks"].each { |target|
+        tasks.push(Task.new(type: target["type"], file_dir: target["file_dir"], source_dir: target["password"], command: target["command"]
+        ))
+      }
+
       Schedule.new(
-        is_command: obj["is_command"],
-        corn: obj["corn"],
-        once: obj["once"],
-        command: obj["command"],
-        is_local: obj["is_local"],
-        exec_file: obj ["exec_file"],
-                       targets: targets)
+        unit_username: obj["schedule"]["unit_username"],
+        unit_password: obj["schedule"]["unit_password"],
+        tasks: tasks,
+        targets: targets)
     end
   end
 
@@ -41,12 +45,14 @@ end
 
 class Task
 
+  attr_reader :type, :local_file, :remote_file, :command, :name
+
   TASK_TYPE_COMMAND = "command"
   TASK_TYPE_COPY = "copy"
 
   def initialize(task = {})
     @type = task[:type]
-    @corn = task[:corn]
+    @name = task[:name]
     if @type.eql?(TASK_TYPE_COPY)
       copy_init(task)
     elsif @type.eql?(TASK_TYPE_COMMAND)
@@ -55,13 +61,31 @@ class Task
   end
 
   def copy_init(task = {})
-    @file_dir = task[:file_dir]
-    @source_dir = task[:source_dir]
+    @local_file = task[:local_file]
+    @remote_file = task[:remote_file]
   end
 
   def command_init(task = {})
     @command = task[:command]
-    @command_file = task[:command_file]
+  end
+
+  def self.demo2
+    return [copy, command]
+  end
+
+  def self.copy
+    Task.new(
+      type: TASK_TYPE_COPY,
+      local_file: "/tmp/test",
+      remote_file: "/tmp"
+    )
+  end
+
+  def self.command
+    Task.new(
+      type: TASK_TYPE_COMMAND,
+      command: "ls /tmp/test"
+    )
   end
 
 end

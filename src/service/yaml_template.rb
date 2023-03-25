@@ -1,28 +1,34 @@
 # frozen_string_literal: true
 require_relative '../util/file_util'
+require_relative '../util/logger_util'
 
 SC_TEMPLATE = "--- !ruby/object:Schedule
-#需要调度的命令
-command: touch /tmp/test
-#corn表达式
-corn: \"* * * * * *\"
-#是否只执行一次
-once: false
-#是否仅是本地执行
-is_local: false
+#全局用户名 targets中未指定用户名将使用此用户名
+unit_username: root
+#全局用户密码 targets中未指定用户密码将使用此密码
+unit_password: '123456'
+tasks:
+- !ruby/object:Task
+  #任务类型  copy 表示文件复制  command 表示执行命令
+  type: copy
+  #当前文件所在位置
+  local_file: \"/tmp/test\"
+  #文件传输目标位置
+  remote_file: \"/tmp\"
+- !ruby/object:Task
+  type: command
+  command: ls /tmp/test
 targets:
 - !ruby/object:Target
-  #第一台目标机器地址
   ip: 127.0.0.1
-  #用户名
   username: test
-  #密码
   password: '123456'
+  user_ip: test@127.0.0.1
 - !ruby/object:Target
-  #目标调度机器地址  不写用户密码则要求该地址与当前执行脚本的机器能够进行ssh
   ip: 128.0.0.2
-#需要调度的文件
-exec_file: \"/tmp/test.sh\"
+  username: ''
+  password: ''
+  user_ip: \"@128.0.0.2\"
 "
 
 SSH_TEMPLATE = "--- !ruby/object:SSH
@@ -51,6 +57,7 @@ targets:
   password: ''
 "
 
+YAML_LOGGER = LoggerUtil.new("yaml")
 def writer_obj(op, src_file)
   case op
   when "ssh"
@@ -60,7 +67,7 @@ def writer_obj(op, src_file)
   else
     exit 0
   end
-
+  YAML_LOGGER.info("writer yaml template file : #{src_file}")
 end
 
 def writer_sc(src_file)

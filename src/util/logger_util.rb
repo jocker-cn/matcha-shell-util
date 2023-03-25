@@ -45,3 +45,5 @@ class LoggerUtil
     end
   end
 end
+
+TASK_LOGGER= LoggerUtil.new("task")

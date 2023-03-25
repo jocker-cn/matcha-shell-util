@@ -2,7 +2,7 @@
 require 'fileutils'
 require_relative './logger_util'
 
-FILE_LOGGER = LoggerUtil.new("FILE")
+FILE_LOGGER = LoggerUtil.new("file")
 
 def is_file(file)
   file != nil && File.file?(file)
@@ -96,3 +96,4 @@ def file_write_batch(map, encoding = "UTF-8")
   end
   true
 end
+

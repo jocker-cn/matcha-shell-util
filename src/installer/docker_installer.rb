@@ -31,7 +31,7 @@ CONTAINER_START_SHELL = SHELL::SYSTEMCTL_ + " start containerd"
 CONTAINER_STOP_SHELL = SHELL::SYSTEMCTL_ + " stop containerd"
 CONTAINER_ENABLE_SHELL = SHELL::SYSTEMCTL_ + " enable --now containerd"
 
-DOCKER_LOG = LoggerUtil.new("DOCKER")
+DOCKER_LOG = LoggerUtil.new("docker")
 
 class DockerInstaller
   include Installer

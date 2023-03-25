@@ -6,7 +6,6 @@ require_relative '../yaml/schedule'
 require_relative '../service/man_docs'
 require_relative '../service/yaml_template'
 
-
 class ArgsResolve
   def resolve(option) end
 
@@ -81,14 +80,12 @@ end
 # -c 命令
 # -f yaml文件
 # -s 目标ip地址
-# -e 可执行文件
 # -u 目标机器username
 # -p 目标机器password
 class ScheduledResolve < ArgsResolve
   SC_KEY_C = "-c"
   SC_KEY_F = "-f"
   SC_KEY_S = "-s"
-  SC_KEY_E = "-e"
   SC_KEY_U = "-u"
   SC_KEY_P = "-p"
 
@@ -103,14 +100,22 @@ class ScheduledResolve < ArgsResolve
 
     targets = []
 
-    ips = option[SC_KEY_S]
-    ips.each do |ip|
-      targets.push(Target.new(ip, option[SC_KEY_U], option[SC_KEY_P]))
+    ips = option[SC_KEY_S].to_s.split(",")
+    if ips != nil
+      ips.each do |ip|
+        targets.push(Target.new(ip, option[SC_KEY_U], option[SC_KEY_P]))
+      end
     end
 
+    tasks = []
+    command = option[SC_KEY_C]
+    if command != nil
+      tasks.push(Task.new(type: Task::TASK_TYPE_COMMAND, command: command, name: Task::TASK_TYPE_COMMAND,))
+    end
+
+    # 命令行入参 任务名称均为 command
     schedule = Schedule.new(
-      command: option[SC_KEY_C],
-      exec_file: option[SC_KEY_E],
+      tasks: tasks,
       targets: targets
     ) if schedule == nil
 
@@ -120,6 +125,7 @@ end
 
 class InstallResolve < ArgsResolve
   def resolve(option) end
+
 end
 
 class YamlResolve < ArgsResolve
@@ -134,7 +140,7 @@ class YamlResolve < ArgsResolve
     key = option.keys[0]
     obj = YAML_TEMPLATE[key]
     abort "No supported model #{option} content was found. Please try [matcha support all] to view the supported content." if obj == nil
-    writer_obj(key,obj)
+    writer_obj(key, obj)
     exit 0
   end
 
@@ -155,6 +161,7 @@ class SupportResolve < ArgsResolve
     puts help_man
     exit 0
   end
+
 end
 
 SSH_ARGS = {
