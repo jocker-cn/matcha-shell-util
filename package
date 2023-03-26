@@ -1,55 +1,87 @@
 #!/bin/bash
 #
-# matcha shell package
+# matcha project package
 # Copyright 2023 Joker
 
-source ./src/core/log/matcha_log
-package_name="matcha.tar.gz"
-package_dir="src/core"
-sha256sum_file="SHA256SUMS.txt"
-test_dir="./test"
-function matcha_test() {
-  for file in $(readlink -f $test_dir/**/*test*) ; do
-    if [[ -f $file ]]; then
-        sh "$file"
-        if "$?" != 0; then
-            exit 1
-        fi
-    fi
-  done
-}
+#执行权限校验
+if [[ ! -x bin/matcha ]]; then
+  /usr/bin/chmod +x bin/matcha
+fi
 
-function main() {
-  #create sha256sum
-  local method_name="${FUNCNAME[0]}"
+if [[ ! -x sha256sum_c ]]; then
+  /usr/bin/chmod +x sha256sum_c
+fi
 
-  log_info "$method_name clear older version"
+if [[ ! -x ./bin/core/log/matcha_log ]]; then
+  /usr/bin/chmod +x ./bin/core/log/matcha_log
+fi
 
-  rm -f ./$package_name
-  rm -f ./$sha256sum_file
+source ./bin/core/log/matcha_log
 
-  log_info "$method_name create SHA256SUM.txt"
+log_info "matcha project package"
 
-  if ! ./sha256sum_c "$package_dir"; then
-    log_error "$method_name sha256sum_c exec failed"
-    exit 1
-  fi
+ruby_version=$(ruby -v)
+#环境校验
+if [[ -z $ruby_version ]]; then
+  echo "please check ruby env"
+fi
 
-  log_info "$method_name update file dir in  $sha256sum_file"
+log_info "ruby version : $ruby_version"
 
-  if ! sed -i "s/*/matcha\//g" ./$sha256sum_file; then
-    log_error "$method_name sed $sha256sum_file failed"
-    exit 1
-  fi
+curren_dir=$(pwd)
+log_info "package work dir: ${curren_dir}"
 
-  log_info "$method_name package $package_name"
+version=$(ruby -e "require './version.rb'; puts matcha_version")
+package_dir="$version-package"
+gem_file_name="matcha-$version.gem"
 
-  if ! tar -zcvf matcha.tar.gz $package_dir matcha.1; then
-    log_error "$method_name package $package_name failed"
-    exit 1
-  fi
+log_info "project version : $version, package_dir: $package_dir, gem_file: $gem_file_name"
 
-  log_info "$method_name package $package_name"
-}
+tgz_name="matcha-$version.tar.gz"
 
-main "$@"
+log_info "clean gem cache : /usr/bin/rm -rf ./vendor"
+
+log_info "executable for bin/matcha"
+
+#gem环境清理
+if ! /usr/bin/rm -rf ./vendor; then
+  log_error "clean gem cache failed"
+  exit 1
+fi
+
+#旧包清理
+/usr/bin/rm -rf "$tgz_name"
+/usr/bin/rm -rf "$package_dir"
+echo "" >./SHA256SUMS.txt
+
+log_info "bundler install with .gemspec"
+
+# 依赖安装
+bundler install
+
+log_info "bundler package "
+
+#gem 本地包
+bundler package
+
+log_info "gem build .gemspec "
+
+#gem打包
+gem build .gemspec
+
+if ! ./sha256sum_c "$gem_file_name"; then
+  log_error "sha256sums create failed,please try again "
+  exit 1
+fi
+
+mkdir "$package_dir"
+
+/usr/bin/cp -rf ./vendor/cache/** "$package_dir"
+/usr/bin/cp -rf "$gem_file_name" "$package_dir"
+
+log_info "tar for $package_dir"
+
+if ! /usr/bin/tar -zcvf "$tgz_name" "$package_dir"; then
+  log_error "$tgz_name tar failed,please try again"
+  exit 1
+fi

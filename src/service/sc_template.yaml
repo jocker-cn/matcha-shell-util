@@ -1,0 +1,30 @@
+--- !ruby/object:Schedule
+#全局用户名 targets中未指定用户名将使用此用户名
+unit_username: root
+#全局用户密码 targets中未指定用户密码将使用此密码
+unit_password: '123456'
+tasks:
+  - !ruby/object:Task
+    #任务名称
+    name: copy file
+    #任务类型  copy 表示文件复制  command 表示执行命令
+    type: copy
+    #当前文件所在位置
+    local_file: "/tmp/test"
+    #文件传输目标位置
+    remote_file: "/tmp"
+  - !ruby/object:Task
+    name: shell exec
+    type: command
+    command: ls /tmp/test
+targets:
+  - !ruby/object:Target
+    ip: 127.0.0.1
+    username: test
+    password: '123456'
+    user_ip: test@127.0.0.1
+  - !ruby/object:Target
+    ip: 128.0.0.2
+    username: ''
+    password: ''
+    user_ip: "@128.0.0.2"

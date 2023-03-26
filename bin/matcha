@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# -*- coding: UTF-8 -*-
+$LOAD_PATH.unshift(File.expand_path("../src","Start"))
+
+require 'bundler/setup'
+require 'start'
+Start.new.run(args: ARGV)

@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# matcha shell package
+# Copyright 2023 Joker
+
+source ./src/core/log/matcha_log
+
+package_name="matcha.tar.gz"
+package_dir="src/core"
+sha256sum_file="SHA256SUMS.txt"
+test_dir="./test"
+function matcha_test() {
+  for file in $(readlink -f $test_dir/**/*test*) ; do
+    if [[ -f $file ]]; then
+        sh "$file"
+        if "$?" != 0; then
+            exit 1
+        fi
+    fi
+  done
+}
+
+function main() {
+  #create sha256sum
+  local method_name="${FUNCNAME[0]}"
+
+  log_info "$method_name clear older version"
+
+  rm -f ./$package_name
+  rm -f ./$sha256sum_file
+
+  log_info "$method_name create SHA256SUM.txt"
+
+  if ! ./sha256sum_c "$package_dir"; then
+    log_error "$method_name sha256sum_c exec failed"
+    exit 1
+  fi
+
+  log_info "$method_name update file dir in  $sha256sum_file"
+
+  if ! sed -i "s/*/matcha\//g" ./$sha256sum_file; then
+    log_error "$method_name sed $sha256sum_file failed"
+    exit 1
+  fi
+
+  log_info "$method_name package $package_name"
+
+  if ! tar -zcvf matcha.tar.gz $package_dir; then
+    log_error "$method_name package $package_name failed"
+    exit 1
+  fi
+
+  log_info "$method_name package $package_name"
+}
+
+main "$@"

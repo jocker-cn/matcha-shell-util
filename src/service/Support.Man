@@ -1,0 +1,8 @@
+Support:
+      MODEL_NAME: schedule[sc]
+      MODEL_DESC: 对命令和脚本的调度模块ssh
+             USE: use `matcha support sc` see see details
+
+      MODEL_NAME: ssh
+      MODEL_DESC: 批量完成指定节点的SSH互信工作
+             USE: use `matcha support ssh` see details
