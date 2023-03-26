@@ -4,6 +4,7 @@
 # Copyright 2023 Joker
 
 source ./src/core/log/matcha_log
+
 package_name="matcha.tar.gz"
 package_dir="src/core"
 sha256sum_file="SHA256SUMS.txt"
@@ -44,7 +45,7 @@ function main() {
 
   log_info "$method_name package $package_name"
 
-  if ! tar -zcvf matcha.tar.gz $package_dir matcha.1.deprecated; then
+  if ! tar -zcvf matcha.tar.gz $package_dir; then
     log_error "$method_name package $package_name failed"
     exit 1
   fi

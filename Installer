@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# installer with matcha shell
+# Copyright 2023 Joker
+
+is_local=$1
+
+ruby_version=$(ruby -v)
+
+matcha_version="1.0.0"
+
+matcha_gem_file="matcha-$matcha_version.gem"
+
+#matcha_file_name
+matcha_file_name="matcha-$matcha_version.tar.gz"
+
+check_file_name="SHA256SUMS.txt"
+
+time=$(date %Y%m%d%H%M%S)
+
+install_word_dir="/tmp/$time"
+
+#工程包下载路径
+curl_matcha_file_path="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_version}/$matcha_file_name"
+#校验文件下载路径
+check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_version}/$check_file_name"
+
+matcha_install_dir="$install_word_dir/matcha-project"
+
+#gem文件安装
+function install_matcha() {
+  #创建解压缩目录
+  /usr/bin/mkdir -p "$matcha_install_dir"
+  #解压文件
+  /usr/bin/tar -zcvf "$install_word_dir/$matcha_file_name" -C "$matcha_install_dir/"
+
+  #SHA256SUMS校验
+  /usr/bin/cp -f "$install_word_dir/$check_file_name" "$matcha_install_dir/"
+  /usr/bin/cd "$matcha_install_dir" && sha256sum -c "$check_file_name"
+  if $? != 0; then
+    echo "[${FUNCNAME[0]}] SHA256SUMS.txt checked failed!!! please try again"
+    exit 1
+  fi
+
+  #gem安装
+  if [[ $is_local == "local" ]]; then
+    gem install --local "$matcha_install_dir/*.gem"
+    if $? != 0; then
+      echo "[${FUNCNAME[0]}] SHA256SUMS.txt checked failed!!! please try again"
+      exit 1
+    fi
+  else
+    gem install "$matcha_install_dir/$matcha_gem_file"
+  fi
+
+}
+
+function download_matcha() {
+  #创建工作目录
+  /usr/bin/rm -rf "$install_word_dir"
+
+  /usr/bin/mkdir -p "$install_word_dir"
+
+  #下载目标文件
+  curl -o "$install_word_dir/$matcha_file_name" -JLO $curl_matcha_file_path
+  if $? != 0; then
+    echo "[${FUNCNAME[0]}] ${curl_matcha_file_path} download failed"
+    exit 1
+  fi
+
+  curl -o "$install_word_dir/$check_file_name" -JLO $check_sha256
+  if $? != 0; then
+    echo "[${FUNCNAME[0]}] ${check_sha256} download failed"
+    exit 1
+  fi
+
+  #下载完成
+  #文件格式转换
+  sudo /usr/bin/dos2unix "$install_word_dir/$check_file_name"
+
+}
+
+function ruby_env_check() {
+  if [[ -z "$ruby_version" ]]; then
+    echo "please install ruby env"
+    exit 1
+  fi
+  local ruby_version_pre
+  ruby_version_pre=$(echo "$ruby_version" | awk '{print $2}' | awk -F. '{print $1}')
+
+  if [[ $ruby_version_pre -lt 3 ]]; then
+    echo "ruby version must ~> 3.0"
+    exit 1
+  fi
+}
+
+function main() {
+  echo "################################################################################"
+  echo "[${FUNCNAME[0]}] matcha_install for https://github.com/jocker-cn/matcha-shell-util"
+
+  #ruby环境校验
+  echo "ruby env check"
+  ruby_env_check
+
+  echo "matcha project download file "
+  download_matcha
+
+  echo "install matcha project"
+  install_matcha
+
+  echo "matcha install successfully,use 'matcha support all' check"
+}
+main "$@"

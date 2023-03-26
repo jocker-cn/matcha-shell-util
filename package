@@ -3,27 +3,85 @@
 # matcha project package
 # Copyright 2023 Joker
 
-
-if [[ -z $(ruby -v) ]]; then
-    echo "please check ruby env"
+#执行权限校验
+if [[ ! -x bin/matcha ]]; then
+  /usr/bin/chmod +x bin/matcha
 fi
 
+if [[ ! -x sha256sum_c ]]; then
+  /usr/bin/chmod +x sha256sum_c
+fi
+
+if [[ ! -x ./bin/core/log/matcha_log ]]; then
+  /usr/bin/chmod +x ./bin/core/log/matcha_log
+fi
+
+source ./bin/core/log/matcha_log
+
+log_info "matcha project package"
+
+ruby_version=$(ruby -v)
+#环境校验
+if [[ -z $ruby_version ]]; then
+  echo "please check ruby env"
+fi
+
+log_info "ruby version : $ruby_version"
+
 curren_dir=$(pwd)
+log_info "package work dir: ${curren_dir}"
 
 version=$(ruby -e "require './version.rb'; puts matcha_version")
+package_dir="$version-package"
+gem_file_name="matcha-$version.gem"
 
+log_info "project version : $version, package_dir: $package_dir, gem_file: $gem_file_name"
 
+tgz_name="matcha-$version.tar.gz"
 
+log_info "clean gem cache : /usr/bin/rm -rf ./vendor"
 
-#环境清理
-/usr/bin/rm -f
+log_info "executable for bin/matcha"
+
+#gem环境清理
+if ! /usr/bin/rm -rf ./vendor; then
+  log_error "clean gem cache failed"
+  exit 1
+fi
+
+#旧包清理
+/usr/bin/rm -rf "$tgz_name"
+/usr/bin/rm -rf "$package_dir"
+echo "" >./SHA256SUMS.txt
+
+log_info "bundler install with .gemspec"
 
 # 依赖安装
-/usr/bin/bundler install
+bundler install
+
+log_info "bundler package "
 
 #gem 本地包
-/usr/bin/bundler package
+bundler package
 
-echo  matcha_version
+log_info "gem build .gemspec "
 
-main "$@"
+#gem打包
+gem build .gemspec
+
+if ! ./sha256sum_c "$gem_file_name"; then
+  log_error "sha256sums create failed,please try again "
+  exit 1
+fi
+
+mkdir "$package_dir"
+
+/usr/bin/cp -rf ./vendor/cache/** "$package_dir"
+/usr/bin/cp -rf "$gem_file_name" "$package_dir"
+
+log_info "tar for $package_dir"
+
+if ! /usr/bin/tar -zcvf "$tgz_name" "$package_dir"; then
+  log_error "$tgz_name tar failed,please try again"
+  exit 1
+fi

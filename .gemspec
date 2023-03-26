@@ -12,7 +12,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["src"]
   spec.files = Dir["src/**/*", "bin/**/*", "README.md", "LICENSE","vendor/**/*"]
   spec.executables = ["matcha"]
-  spec.require_path="src"
 
   spec.add_runtime_dependency 'ruby_expect', '~> 1.7.5'
   spec.add_runtime_dependency 'ed25519', '~> 1.3.0'
