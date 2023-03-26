@@ -32,7 +32,7 @@ curren_dir=$(pwd)
 log_info "package work dir: ${curren_dir}"
 
 version=$(ruby -e "require './version.rb'; puts matcha_version")
-package_dir="$version-package"
+package_dir="matcha-project"
 gem_file_name="matcha-$version.gem"
 
 log_info "project version : $version, package_dir: $package_dir, gem_file: $gem_file_name"

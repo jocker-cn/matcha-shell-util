@@ -19,7 +19,8 @@ higher.
 
 
 ```shell
-curl -JLO https://github.com/jocker-cn/matcha-shell-util/releases/download/1.0.0/installer && bash installer
+version=v1.0.0 && 
+curl -JLO https://github.com/jocker-cn/matcha-shell-util/releases/download/${version}/Installer && bash Installer
 ```
 
 

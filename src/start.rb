@@ -10,7 +10,6 @@ require_relative './util/user_util'
 $work_dir="/opt/.matcha"
 
 APP_RUN_LOGGER = LoggerUtil.new("matcha")
-ARGS = ARGV
 
 def choose_parse(model)
   parse = choose(model)
@@ -25,6 +24,3 @@ class Start
     Support.new(args_resolve, options).do_it
   end
 end
-
-Start.new.run(ARGS)
-
