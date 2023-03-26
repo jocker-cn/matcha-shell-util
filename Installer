@@ -7,6 +7,7 @@ is_local=$1
 
 ruby_version=$(ruby -v)
 
+matcha_file_version="v1.0.0"
 matcha_version="1.0.0"
 
 matcha_gem_file="matcha-$matcha_version.gem"
@@ -16,41 +17,44 @@ matcha_file_name="matcha-$matcha_version.tar.gz"
 
 check_file_name="SHA256SUMS.txt"
 
-time=$(date %Y%m%d%H%M%S)
+time=$(date +%Y%m%d%H%M%S)
 
-install_word_dir="/tmp/$time"
+install_word_dir="/tmp/matcha-$time"
 
 #工程包下载路径
-curl_matcha_file_path="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_version}/$matcha_file_name"
+curl_matcha_file_path="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_file_version}/$matcha_file_name"
 #校验文件下载路径
-check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_version}/$check_file_name"
+check_sha256="https://github.com/jocker-cn/matcha-shell-util/releases/download/${matcha_file_version}/$check_file_name"
 
 matcha_install_dir="$install_word_dir/matcha-project"
 
 #gem文件安装
 function install_matcha() {
-  #创建解压缩目录
-  /usr/bin/mkdir -p "$matcha_install_dir"
   #解压文件
-  /usr/bin/tar -zcvf "$install_word_dir/$matcha_file_name" -C "$matcha_install_dir/"
+  if ! /usr/bin/tar -zxvf "$install_word_dir/$matcha_file_name" -C "$install_word_dir"; then
+    echo "[${FUNCNAME[0]}] tar $matcha_file_name failed "
+    exit 1
+  fi
 
   #SHA256SUMS校验
-  /usr/bin/cp -f "$install_word_dir/$check_file_name" "$matcha_install_dir/"
-  /usr/bin/cd "$matcha_install_dir" && sha256sum -c "$check_file_name"
-  if $? != 0; then
+  cd "$matcha_install_dir" && sha256sum -c "$check_file_name"
+  if [[ $? != 0 ]]; then
     echo "[${FUNCNAME[0]}] SHA256SUMS.txt checked failed!!! please try again"
     exit 1
   fi
 
   #gem安装
-  if [[ $is_local == "local" ]]; then
-    gem install --local "$matcha_install_dir/*.gem"
-    if $? != 0; then
-      echo "[${FUNCNAME[0]}] SHA256SUMS.txt checked failed!!! please try again"
+  if [ "$is_local" = "local" ]; then
+    cd "$matcha_install_dir" && gem install --local *.gem
+    if [[ $? != 0 ]]; then
+      echo "[${FUNCNAME[0]}] gem install failed!!! please try again"
       exit 1
     fi
   else
-    gem install "$matcha_install_dir/$matcha_gem_file"
+    if ! gem install --local "$matcha_install_dir/$matcha_gem_file"; then
+      echo "[${FUNCNAME[0]}]gem install failed!!! please try again"
+      exit 1
+    fi
   fi
 
 }
@@ -60,23 +64,23 @@ function download_matcha() {
   /usr/bin/rm -rf "$install_word_dir"
 
   /usr/bin/mkdir -p "$install_word_dir"
+  /usr/bin/mkdir -p "$matcha_install_dir"
 
   #下载目标文件
-  curl -o "$install_word_dir/$matcha_file_name" -JLO $curl_matcha_file_path
-  if $? != 0; then
+
+  if ! curl -o "$install_word_dir/$matcha_file_name" -JLO $curl_matcha_file_path; then
     echo "[${FUNCNAME[0]}] ${curl_matcha_file_path} download failed"
     exit 1
   fi
 
-  curl -o "$install_word_dir/$check_file_name" -JLO $check_sha256
-  if $? != 0; then
+  if ! curl -o "$matcha_install_dir/$check_file_name" -JLO $check_sha256; then
     echo "[${FUNCNAME[0]}] ${check_sha256} download failed"
     exit 1
   fi
 
   #下载完成
   #文件格式转换
-  sudo /usr/bin/dos2unix "$install_word_dir/$check_file_name"
+  sudo /usr/bin/dos2unix "$matcha_install_dir/$check_file_name"
 
 }
 

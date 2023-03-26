@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 require 'net/ssh'
 require 'net/scp'
-require 'ed25519'
-require 'bcrypt_pbkdf'
 require 'ruby_expect'
 
 PORT = 22
@@ -161,15 +159,3 @@ def interactive_current_command(command, &block)
     end
   end
 end
-
-# s = "password: ".to_s.dup.force_encoding('ASCII-8BIT')
-# any do
-#   expect s do
-#     puts "y"
-#     send 'y'
-#   end
-#   expect s1 do
-#     puts "123456"
-#     send '123456'
-#   end
-# end

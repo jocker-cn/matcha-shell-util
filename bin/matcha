@@ -4,4 +4,5 @@ $LOAD_PATH.unshift(File.expand_path("../src","Start"))
 
 require 'bundler/setup'
 require 'start'
-Start.new.run(args: ARGV)
+
+Start.new.run(ARGV)
